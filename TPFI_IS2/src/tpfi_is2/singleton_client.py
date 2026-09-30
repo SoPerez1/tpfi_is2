@@ -1,5 +1,3 @@
-# ES: Módulo SingletonClient para TPFI_IS2.
-# ES: Permite consultar y modificar CorporateData mediante comunicación TCP con el servidor.
 """SingletonClient module for TPFI_IS2.
 
 This module provides the SingletonClient class and CLI interface for querying
@@ -16,12 +14,9 @@ from pathlib import Path
 from typing import Any
 
 
-# ES: Cliente que envía solicitudes get, set y list al servidor central de aplicaciones.
 class SingletonClient:
     """Client for issuing get, set, and list requests to the central application server."""
 
-    # ES: Inicializa el cliente. host es el nombre o IP del servidor; port, el puerto TCP;
-    # ES: verbose activa los registros de depuración.
     def __init__(self, host: str = "localhost", port: int = 8080, verbose: bool = False) -> None:
         """Initialize SingletonClient with target server host and port.
 
@@ -36,7 +31,6 @@ class SingletonClient:
         self.logger = logging.getLogger(self.__class__.__name__)
         self._configure_logging()
 
-    # ES: Configura el nivel y el formato de los registros según la opción de detalle.
     def _configure_logging(self) -> None:
         """Configure logging level and formatting based on verbosity flag."""
         log_level = logging.DEBUG if self.verbose else logging.INFO
@@ -47,7 +41,6 @@ class SingletonClient:
         )
         self.logger.setLevel(log_level)
 
-    # ES: Devuelve como texto el identificador único del sistema basado en la dirección MAC.
     def get_system_uuid(self) -> str:
         """Retrieve hardware node MAC-based unique identifier.
 
@@ -56,7 +49,6 @@ class SingletonClient:
         """
         return str(uuid.getnode())
 
-    # ES: Devuelve un identificador de sesión aleatorio en formato UUID4.
     def get_session_id(self) -> str:
         """Generate a unique random session identifier.
 
@@ -65,8 +57,6 @@ class SingletonClient:
         """
         return str(uuid.uuid4())
 
-    # ES: input_data es el contenido de la solicitud; devuelve el payload validado y completo.
-    # ES: Lanza ValueError si falta ACTION o su valor no es válido.
     def process_request(self, input_data: dict[str, Any]) -> Any:
         """Process and validate request payload before transmission.
 
@@ -90,8 +80,6 @@ class SingletonClient:
         payload["SESSION_ID"] = self.get_session_id()
         return payload
 
-    # ES: payload es la solicitud; devuelve el JSON recibido del servidor.
-    # ES: Lanza ConnectionError si falla la conexión y RuntimeError si la respuesta no es JSON válido.
     def send_request(self, payload: dict[str, Any]) -> Any:
         """Send JSON payload over TCP socket to the server and return response.
 
@@ -116,7 +104,6 @@ class SingletonClient:
                 client_socket.sendall(raw_json.encode("utf-8"))
 
                 # Shutdown sending side to signal request end to server
-                # ES: Cierra el canal de envío para indicar al servidor que terminó la solicitud.
                 try:
                     client_socket.shutdown(socket.SHUT_WR)
                 except OSError:
@@ -144,8 +131,6 @@ class SingletonClient:
             self.logger.error("Failed to parse response JSON: %s", exc)
             raise RuntimeError("Invalid JSON response received from server") from exc
 
-    # ES: input_path indica el archivo de solicitud; output_path es opcional y señala dónde guardar la respuesta.
-    # ES: Si output_path no se especifica, escribe en la salida estándar; devuelve la respuesta del servidor.
     def execute(self, input_path: str | Path, output_path: str | Path | None = None) -> Any:
         """Execute request defined in input JSON file and output results.
 
@@ -180,7 +165,6 @@ class SingletonClient:
         return response
 
 
-# ES: Punto de entrada de la interfaz de línea de comandos (CLI).
 def main() -> None:
     """CLI entry point for singletonclient."""
     parser = argparse.ArgumentParser(

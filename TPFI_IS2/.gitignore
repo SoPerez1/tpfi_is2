@@ -54,4 +54,4 @@ site/
 # .vscode/
 IS2_TPFI_credentials.json 
 .venv/
-tests/sources/
+TPFI_IS2/tests/sources/

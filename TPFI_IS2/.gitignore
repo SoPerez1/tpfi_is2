@@ -52,3 +52,6 @@ site/
 # IDE files
 # .idea/
 # .vscode/
+IS2_TPFI_credentials.json 
+.venv/
+TPFI_IS2/tests/sources/

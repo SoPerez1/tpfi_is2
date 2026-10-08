@@ -3,7 +3,9 @@
 import json
 import socket
 import threading
+from pathlib import Path
 from typing import Generator
+
 import pytest
 from tpfi_is2.singleton_client import SingletonClient
 
@@ -77,12 +79,14 @@ def test_send_request_to_mock_server(mock_server: tuple[str, int]) -> None:
     assert response["data"]["ID"] == "UADER-1"
 
 
-def test_execute_from_file(tmp_path: pytest.TempPathFactory, mock_server: tuple[str, int]) -> None:
+def test_execute_from_file(tmp_path: Path, mock_server: tuple[str, int]) -> None:
     """Test reading from input JSON file and writing to output JSON file."""
     host, port = mock_server
 
-    input_file = tmp_path.mktemp("test") / "input.json"
-    output_file = tmp_path.mktemp("test") / "output.json"
+    input_dir = tmp_path / "test_case"
+    input_dir.mkdir()
+    input_file = input_dir / "input.json"
+    output_file = input_dir / "output.json"
 
     input_file.write_text(json.dumps({"ACTION": "list"}), encoding="utf-8")
 

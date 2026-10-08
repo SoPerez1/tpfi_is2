@@ -8,7 +8,7 @@ src_path = Path(__file__).resolve().parent / "src"
 if str(src_path) not in sys.path:
     sys.path.insert(0, str(src_path))
 
-from tpfi_is2.singleton_client import main
+from singleton_client import main
 
 if __name__ == "__main__":
     main()

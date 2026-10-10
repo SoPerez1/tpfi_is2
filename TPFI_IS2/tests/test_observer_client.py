@@ -1,21 +1,24 @@
 import json
 import socket
+import sys
 import threading
+from pathlib import Path
 
-from tpfi_is2.observer_client import ObserverClient
+import pytest
+
+from tpfi_is2.observer_client import ObserverClient, main
 
 
 def test_initialization():
-    # Verifica los valores iniciales
     client = ObserverClient()
 
     assert client.host == "localhost"
     assert client.port == 8080
     assert client.socket is None
+    assert client.retry_interval == 30.0
 
 
 def test_connection_and_disconnection():
-    # Crea un servidor TCP temporal
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind(("127.0.0.1", 0))
     server.listen(1)
@@ -43,7 +46,6 @@ def test_connection_and_disconnection():
 
 
 def test_subscribe():
-    # Comprueba el mensaje JSON de suscripción
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind(("127.0.0.1", 0))
     server.listen(1)
@@ -76,14 +78,11 @@ def test_subscribe():
     server.close()
 
 
-def test_notify(capsys):
-    # Comprueba que se muestra una notificación
-    client = ObserverClient()
+def test_notify(capsys, tmp_path: Path):
+    out_file = tmp_path / "notifications.json"
+    client = ObserverClient(output_file=out_file)
 
-    notification = {
-        "EVENT": "data_updated",
-        "ID": "UADER-FCYT-IS2"
-    }
+    notification = {"EVENT": "data_updated", "ID": "UADER-FCYT-IS2"}
 
     client.notify(notification)
 
@@ -91,3 +90,33 @@ def test_notify(capsys):
 
     assert "Notificación recibida" in output
     assert "data_updated" in output
+
+    written = out_file.read_text(encoding="utf-8")
+    assert "UADER-FCYT-IS2" in written
+
+
+def test_main_cli_arguments(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
+    out_file = tmp_path / "out.json"
+
+    def dummy_run(self):
+        self.running = False
+
+    monkeypatch.setattr(ObserverClient, "run", dummy_run)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "observerclient.py",
+            "-s",
+            "127.0.0.1",
+            "-p",
+            "9090",
+            "-o",
+            str(out_file),
+            "-v",
+            "--retry-interval",
+            "15",
+        ],
+    )
+
+    main()

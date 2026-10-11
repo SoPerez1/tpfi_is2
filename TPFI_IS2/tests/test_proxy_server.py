@@ -103,8 +103,8 @@ def test_observer_notified_on_set(memory_backend: tuple[str, int]) -> None:
     def subscriber() -> None:
         with socket.create_connection((host, port), timeout=5) as sock:
             sock.settimeout(0.5)
-            sock.sendall(json.dumps({"UUID": "obs-1", "SESSION_ID": "s-obs", "ACTION": "subscribe"}).encode("utf-8"))
-            sock.shutdown(socket.SHUT_WR)
+            sub_payload = {"UUID": "obs-1", "SESSION_ID": "s-obs", "ACTION": "subscribe"}
+            sock.sendall(json.dumps(sub_payload).encode("utf-8") + b"\n")
             buffer = ""
             deadline = time.time() + 5
             while time.time() < deadline:

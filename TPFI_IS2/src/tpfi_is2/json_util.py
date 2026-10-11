@@ -20,13 +20,24 @@ def dynamodb_to_json(value: Any) -> Any:
 
 
 def read_tcp_json(sock) -> dict[str, Any]:
-    """Read one JSON object sent by a client (until peer shuts down write side)."""
+    """Read one JSON object sent by a client (streaming or EOF-terminated)."""
     chunks: list[bytes] = []
+    decoder = json.JSONDecoder()
+    buffer = ""
     while True:
         part = sock.recv(4096)
         if not part:
             break
         chunks.append(part)
+        buffer += part.decode("utf-8")
+        stripped = buffer.strip()
+        if stripped:
+            try:
+                obj, _ = decoder.raw_decode(stripped)
+                if isinstance(obj, dict):
+                    return obj
+            except json.JSONDecodeError:
+                pass
     if not chunks:
         raise ValueError("Empty request")
     return json.loads(b"".join(chunks).decode("utf-8"))

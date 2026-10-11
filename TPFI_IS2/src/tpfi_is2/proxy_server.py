@@ -120,7 +120,10 @@ class ProxyApplicationServer:
 
     def serve_forever(self) -> None:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        if sys.platform == "win32":
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+        else:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
             sock.bind((self.host, self.port))
         except OSError as exc:
@@ -145,6 +148,14 @@ class ProxyApplicationServer:
             except OSError:
                 pass
             self._listen = None
+        if self._observer is not None:
+            with self._observer._lock:
+                for c, _ in list(self._observer._subscribers):
+                    try:
+                        c.close()
+                    except OSError:
+                        pass
+                self._observer._subscribers.clear()
 
 
 def main() -> None:

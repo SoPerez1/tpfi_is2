@@ -7,32 +7,58 @@ from typing import Any
 
 
 def dynamodb_to_json(value: Any) -> Any:
-    """Convert DynamoDB types to JSON-serializable values."""
+    # Convierte valores de DynamoDB a formatos compatibles con JSON
     if isinstance(value, Decimal):
         if value % 1 == 0:
             return int(value)
         return float(value)
+
     if isinstance(value, dict):
         return {k: dynamodb_to_json(v) for k, v in value.items()}
+
     if isinstance(value, list):
         return [dynamodb_to_json(v) for v in value]
+
     return value
 
 
-def read_tcp_json(sock) -> dict[str, Any]:
-    """Read one JSON object sent by a client (until peer shuts down write side)."""
-    chunks: list[bytes] = []
+def read_tcp_json(sock: socket.socket) -> dict[str, Any]:
+    # Recibe un mensaje JSON por TCP
+    buffer = ""
+
     while True:
         part = sock.recv(4096)
+
         if not part:
             break
-        chunks.append(part)
-    if not chunks:
+
+        buffer += part.decode("utf-8")
+
+        # Procesa mensajes terminados en salto de línea
+        if "\n" in buffer:
+            line = buffer.split("\n", 1)[0]
+
+            if line.strip():
+                return json.loads(line)
+
+        # También acepta un JSON completo sin salto de línea
+        try:
+            return json.loads(buffer)
+        except json.JSONDecodeError:
+            continue
+
+    if not buffer.strip():
         raise ValueError("Empty request")
-    return json.loads(b"".join(chunks).decode("utf-8"))
+
+    return json.loads(buffer)
 
 
-def write_tcp_json(sock, payload: Any) -> None:
-    """Send one JSON response and half-close the write side."""
-    sock.sendall(json.dumps(payload, ensure_ascii=False).encode("utf-8"))
-    sock.shutdown(socket.SHUT_WR)
+def write_tcp_json(sock: socket.socket, payload: Any) -> None:
+    # Envía una respuesta JSON por TCP
+    message = json.dumps(payload, ensure_ascii=False) + "\n"
+    sock.sendall(message.encode("utf-8"))
+
+    try:
+        sock.shutdown(socket.SHUT_WR)
+    except OSError:
+        pass

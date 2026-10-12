@@ -21,35 +21,68 @@ def send_request(host: str, port: int, payload: dict[str, Any]) -> Any:
     with socket.create_connection((host, port), timeout=5) as sock:
         sock.sendall(json.dumps(payload).encode("utf-8"))
         sock.shutdown(socket.SHUT_WR)
+
         data = b""
         while chunk := sock.recv(4096):
             data += chunk
+
     return json.loads(data.decode("utf-8"))
 
 
 @pytest.fixture
-def memory_backend(monkeypatch: pytest.MonkeyPatch) -> Generator[tuple[str, int], None, None]:
+def memory_backend(
+    monkeypatch: pytest.MonkeyPatch,
+) -> Generator[tuple[str, int], None, None]:
+
     monkeypatch.setenv("TPFI_USE_MEMORY", "1")
+
     MemoryCorporateDataGateway.reset()
     MemoryCorporateLogGateway.reset()
+
     data = MemoryCorporateDataGateway.instance()
     log = MemoryCorporateLogGateway.instance()
+
     proxy = CorporateDataProxy(data=data, log=log)
-    server = ProxyApplicationServer(host="127.0.0.1", port=0, proxy=proxy, log_gateway=log)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
+
+    server = ProxyApplicationServer(
+        host="127.0.0.1",
+        port=0,
+        proxy=proxy,
+        log_gateway=log,
+    )
+
+    thread = threading.Thread(
+        target=server.serve_forever,
+        daemon=True,
+    )
+
     thread.start()
     time.sleep(0.05)
+
     yield "127.0.0.1", server.port
+
     server.shutdown()
     thread.join(timeout=2)
 
 
 def test_get_set_list_happy_path(memory_backend: tuple[str, int]) -> None:
+    # Verifica las operaciones get, set y list
     host, port = memory_backend
-    meta = {"UUID": "cpu-1", "SESSION_ID": "sess-1"}
 
-    missing = send_request(host, port, {**meta, "ACTION": "get", "ID": "UADER-FCYT-IS2"})
-    assert missing == {"Error": "Record not found: UADER-FCYT-IS2"}
+    meta = {
+        "UUID": "cpu-1",
+        "SESSION_ID": "sess-1",
+    }
+
+    missing = send_request(
+        host,
+        port,
+        {**meta, "ACTION": "get", "ID": "UADER-FCYT-IS2"},
+    )
+
+    assert missing == {
+        "Error": "Record not found: UADER-FCYT-IS2"
+    }
 
     created = send_request(
         host,
@@ -62,41 +95,74 @@ def test_get_set_list_happy_path(memory_backend: tuple[str, int]) -> None:
             "localidad": "Concepción del Uruguay",
         },
     )
+
     assert created["id"] == "UADER-FCYT-IS2"
     assert created["domicilio"] == "25 de Mayo 385-1P"
 
-    fetched = send_request(host, port, {**meta, "ACTION": "get", "ID": "UADER-FCYT-IS2"})
+    fetched = send_request(
+        host,
+        port,
+        {**meta, "ACTION": "get", "ID": "UADER-FCYT-IS2"},
+    )
+
     assert fetched["domicilio"] == "25 de Mayo 385-1P"
 
-    listed = send_request(host, port, {**meta, "ACTION": "list"})
+    listed = send_request(
+        host,
+        port,
+        {**meta, "ACTION": "list"},
+    )
+
     assert isinstance(listed, list)
     assert len(listed) == 1
 
     log = MemoryCorporateLogGateway.instance()
     actions = [entry["action"] for entry in log.entries]
+
     assert actions.count("get") >= 2
     assert "set" in actions
     assert "list" in actions
 
 
-def test_set_requires_corporate_fields(memory_backend: tuple[str, int]) -> None:
+def test_set_requires_corporate_fields(
+    memory_backend: tuple[str, int],
+) -> None:
+    # Verifica que set requiera campos para modificar
     host, port = memory_backend
+
     response = send_request(
         host,
         port,
-        {"UUID": "1", "SESSION_ID": "2", "ACTION": "set", "ID": "X"},
+        {
+            "UUID": "1",
+            "SESSION_ID": "2",
+            "ACTION": "set",
+            "ID": "X",
+        },
     )
+
     assert "Error" in response
 
 
-def test_port_already_in_use(memory_backend: tuple[str, int]) -> None:
+def test_port_already_in_use(
+    memory_backend: tuple[str, int],
+) -> None:
+    # Verifica que no se pueda utilizar un puerto ocupado
     _host, port = memory_backend
-    second = ProxyApplicationServer(host="127.0.0.1", port=port)
+
+    second = ProxyApplicationServer(
+        host="127.0.0.1",
+        port=port,
+    )
+
     with pytest.raises(SystemExit, match="cannot bind"):
         second.serve_forever()
 
 
-def test_observer_notified_on_set(memory_backend: tuple[str, int]) -> None:
+def test_observer_notified_on_set(
+    memory_backend: tuple[str, int],
+) -> None:
+    # Verifica las notificaciones utilizando ObserverClient
     host, port = memory_backend
     received: list[dict[str, Any]] = []
 
@@ -111,7 +177,11 @@ def test_observer_notified_on_set(memory_backend: tuple[str, int]) -> None:
     assert client.connect()
     assert client.subscribe()
 
-    listen_thread = threading.Thread(target=client.listen, daemon=True)
+    listen_thread = threading.Thread(
+        target=client.listen,
+        daemon=True,
+    )
+
     listen_thread.start()
 
     send_request(
@@ -127,6 +197,7 @@ def test_observer_notified_on_set(memory_backend: tuple[str, int]) -> None:
     )
 
     deadline = time.time() + 2
+
     while time.time() < deadline and len(received) < 1:
         time.sleep(0.05)
 
@@ -134,4 +205,86 @@ def test_observer_notified_on_set(memory_backend: tuple[str, int]) -> None:
     listen_thread.join(timeout=1)
 
     assert len(received) >= 1
+    assert received[-1]["sede"] == "FCyT"
+
+
+def test_observer_notified_with_socket(
+    memory_backend: tuple[str, int],
+) -> None:
+    # Verifica las notificaciones utilizando sockets directamente
+    host, port = memory_backend
+    received: list[dict[str, Any]] = []
+    subscribed = threading.Event()
+
+    def subscriber() -> None:
+        with socket.create_connection((host, port), timeout=5) as sock:
+            sock.settimeout(0.5)
+
+            # Envía la suscripción terminada en salto de línea
+            sock.sendall(
+    (
+        json.dumps(
+            {
+                "UUID": "obs-1",
+                "SESSION_ID": "s-obs",
+                "ACTION": "subscribe",
+            }
+        ) + "\n"
+        ).encode("utf-8")
+        )
+
+            buffer = ""
+            deadline = time.time() + 5
+
+            while time.time() < deadline:
+                try:
+                    chunk = sock.recv(4096)
+                except TimeoutError:
+                    continue
+
+                if not chunk:
+                    break
+
+                buffer += chunk.decode("utf-8")
+
+                while "\n" in buffer:
+                    line, buffer = buffer.split("\n", 1)
+
+                    if not line.strip():
+                        continue
+
+                    message = json.loads(line)
+                    received.append(message)
+
+                    if message.get("status") == "subscribed":
+                        subscribed.set()
+
+                if len(received) >= 2:
+                    return
+
+    threading.Thread(
+        target=subscriber,
+        daemon=True,
+    ).start()
+
+    assert subscribed.wait(timeout=3)
+
+    send_request(
+        host,
+        port,
+        {
+            "UUID": "cpu-2",
+            "SESSION_ID": "sess-2",
+            "ACTION": "set",
+            "ID": "NEW-ID",
+            "sede": "FCyT",
+        },
+    )
+
+    deadline = time.time() + 3
+
+    while time.time() < deadline and len(received) < 2:
+        time.sleep(0.05)
+
+    assert len(received) >= 2
     assert received[-1]["sede"] == "FCyT"

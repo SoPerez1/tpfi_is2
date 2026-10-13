@@ -73,3 +73,23 @@ El repositorio actualmente cuenta con la infraestructura base, el cliente implem
 - **Observer Client (`observer_client.py`):** El cliente que se suscribirá a las notificaciones y dejará el puerto abierto esperando actualizaciones constantes del servidor cada vez que alguien modifique los datos (`set`).
 - **Diagramas:** Construcción de Diagramas UML de Actividad y de Estado.
 - **Flujos CI/CD:** Habilitar GitHub Actions para control estricto (Ruff, Mypy, Bandit).
+
+
+## Diagramas de diseño
+
+### Diagrama de actividad: patrón Proxy
+
+![Diagrama de actividad del servidor para list, get y set](img/diagrama_actividad_proxy.png)
+
+El diagrama muestra el flujo que sigue el servidor al recibir un pedido:
+valida el JSON, registra la acción en CorporateLog y ejecuta get, list o set
+sobre CorporateData. Luego envía la respuesta y cierra la conexión. En el
+caso de set, además notifica a los clientes suscriptos.
+
+### Diagrama de estado: patrón Observer
+
+![Diagrama de estado de una suscripción](img/diagrama_estado_observer.png)
+
+El diagrama muestra los estados de una suscripción: No suscripto, Suscripto
+y Notificando, y los eventos que provocan cada cambio (subscribe, set,
+socket cerrado, falla de envío).

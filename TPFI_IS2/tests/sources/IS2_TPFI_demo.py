@@ -9,14 +9,13 @@
 # * Programa auxiliar para verificar instalación de librerías y pre-requisitos A$
 # *
 # *-----------------------------------------------------------------------------$
-import boto3
-import botocore
-from decimal import Decimal
 import json
-import uuid
 import os
 import platform
-from os import system, name
+import uuid
+from os import name, system
+
+import boto3
 
 # *-----------------------------------------------------------------------------$
 # *----- Clear screen

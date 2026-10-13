@@ -8,16 +8,12 @@
 # * Programa auxiliar para verificar la inserción de registros en la tabla Log
 # *
 # *---------------------------------------------------------------------------------------------------------------
-import boto3
-import botocore
-from decimal import Decimal
-from os import system, name
-import json
-import uuid
 import os
-import platform
-import subprocess
+import uuid
 from datetime import datetime
+from os import name, system
+
+import boto3
 
 # *----- Clear screen
 # for windows

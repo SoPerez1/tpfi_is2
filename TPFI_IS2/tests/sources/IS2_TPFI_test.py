@@ -9,16 +9,13 @@
 # * Programa auxiliar para verificar instalación de librerías y pre-requisitos AWS BOTO3 y credenciales de uso
 # *
 # *---------------------------------------------------------------------------------------------------------------
-import boto3
-import botocore
-from decimal import Decimal
-import json
-import uuid
 import os
-from os import system, name
-import sys
 import platform
-from botocore.exceptions import ClientError
+import sys
+import uuid
+from os import name, system
+
+import boto3
 
 # *----- Acquire running environment
 

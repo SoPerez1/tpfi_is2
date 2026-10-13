@@ -80,9 +80,7 @@ def test_get_set_list_happy_path(memory_backend: tuple[str, int]) -> None:
         {**meta, "ACTION": "get", "ID": "UADER-FCYT-IS2"},
     )
 
-    assert missing == {
-        "Error": "Record not found: UADER-FCYT-IS2"
-    }
+    assert missing == {"Error": "Record not found: UADER-FCYT-IS2"}
 
     created = send_request(
         host,
@@ -222,16 +220,17 @@ def test_observer_notified_with_socket(
 
             # Envía la suscripción terminada en salto de línea
             sock.sendall(
-    (
-        json.dumps(
-            {
-                "UUID": "obs-1",
-                "SESSION_ID": "s-obs",
-                "ACTION": "subscribe",
-            }
-        ) + "\n"
-        ).encode("utf-8")
-        )
+                (
+                    json.dumps(
+                        {
+                            "UUID": "obs-1",
+                            "SESSION_ID": "s-obs",
+                            "ACTION": "subscribe",
+                        }
+                    )
+                    + "\n"
+                ).encode("utf-8")
+            )
 
             buffer = ""
             deadline = time.time() + 5

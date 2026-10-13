@@ -124,7 +124,7 @@ class SingletonClient:
                 self.logger.debug("Received raw response: %s", response_str)
                 return json.loads(response_str)
 
-        except (socket.error, socket.timeout) as exc:
+        except (TimeoutError, OSError) as exc:
             self.logger.error("Network error connecting to %s:%d - %s", self.host, self.port, exc)
             raise ConnectionError(f"Could not connect to server {self.host}:{self.port}") from exc
         except json.JSONDecodeError as exc:
@@ -146,7 +146,7 @@ class SingletonClient:
             raise FileNotFoundError(f"Input file not found: {path_in}")
 
         self.logger.info("Reading request from %s", path_in)
-        with open(path_in, "r", encoding="utf-8") as file:
+        with open(path_in, encoding="utf-8") as file:
             input_data = json.load(file)
 
         payload = self.process_request(input_data)

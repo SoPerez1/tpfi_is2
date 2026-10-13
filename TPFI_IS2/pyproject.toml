@@ -62,6 +62,10 @@ tpfi_is2 = "tpfi_is2.cli:app"
 
 [tool.ruff]
 line-length = 120
+exclude = [
+    "tests/sources",
+    "src/IS2_TPFI_test.py",
+]
 
 [tool.ruff.lint]
 select = [
@@ -82,12 +86,20 @@ extend-immutable-calls = [
 [tool.coverage.run]
 branch = true
 parallel = true
-source = ["src/", "tests/"]
+source = ["src/tpfi_is2"]
+omit = [
+    "*/cli.py",
+    "*/__main__.py",
+]
 
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
-fail_under = 50
+fail_under = 85
+omit = [
+    "*/cli.py",
+    "*/__main__.py",
+]
 exclude_also = [
     "if TYPE_CHECKING:",
     "if typing.TYPE_CHECKING:",
@@ -102,6 +114,8 @@ exclude_also = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+norecursedirs = ["tests/sources"]
+
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tpfi_is2"]

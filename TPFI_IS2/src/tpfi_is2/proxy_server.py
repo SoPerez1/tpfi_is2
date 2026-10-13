@@ -22,7 +22,7 @@ class ProxyApplicationServer:
 
     def __init__(
         self,
-        host: str = "0.0.0.0",
+        host: str = "0.0.0.0",  # nosec B104
         port: int = 8080,
         *,
         proxy: CorporateDataProxy | None = None,
@@ -144,7 +144,8 @@ class ProxyApplicationServer:
             json.dumps(
                 {"status": "subscribed"},
                 ensure_ascii=False,
-            ).encode("utf-8") + b"\n"
+            ).encode("utf-8")
+            + b"\n"
         )
 
         try:
@@ -217,9 +218,7 @@ class ProxyApplicationServer:
             sock.bind((self.host, self.port))
 
         except OSError as exc:
-            raise SystemExit(
-                f"Error: cannot bind {self.host}:{self.port} ({exc})"
-            ) from exc
+            raise SystemExit(f"Error: cannot bind {self.host}:{self.port} ({exc})") from exc
 
         self.port = int(sock.getsockname()[1])
 
@@ -265,9 +264,7 @@ class ProxyApplicationServer:
 
 def main() -> None:
     # Configura los argumentos de ejecución
-    parser = argparse.ArgumentParser(
-        description="SingletonProxyObserverTPFI application server."
-    )
+    parser = argparse.ArgumentParser(description="SingletonProxyObserverTPFI application server.")
 
     parser.add_argument(
         "-p",

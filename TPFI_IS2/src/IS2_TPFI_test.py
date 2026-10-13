@@ -9,16 +9,13 @@
 # * Programa auxiliar para verificar instalación de librerías y pre-requisitos AWS BOTO3 y credenciales de uso
 # *
 # *---------------------------------------------------------------------------------------------------------------
-import boto3
-import botocore
-from decimal import Decimal
-import json
-import uuid
 import os
-from os import system, name
-import sys
 import platform
-from botocore.exceptions import ClientError
+import sys
+import uuid
+from os import name, system
+
+import boto3
 
 # *----- Acquire running environment
 
@@ -33,11 +30,11 @@ CPUmachine = platform.machine()
 # *----- Clear screen
 # for windows
 if name == "nt":
-    _ = system("cls")
+    _ = system("cls")  # nosec B605 B607
 
 # for mac and linux(here, os.name is 'posix')
 else:
-    _ = system("clear")
+    _ = system("clear")  # nosec B605 B607
 
 print("Program: %s Version %s UADER-FCyT-IS2 Programa de test y diagnóstico\n" % (os.path.basename(__file__), VERSION))
 print(

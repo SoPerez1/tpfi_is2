@@ -8,6 +8,7 @@ from typing import Any
 
 def dynamodb_to_json(value: Any) -> Any:
     # Convierte valores de DynamoDB a formatos compatibles con JSON
+    """Convert DynamoDB decimal values into JSON-compatible values."""
     if isinstance(value, Decimal):
         if value % 1 == 0:
             return int(value)
@@ -24,6 +25,7 @@ def dynamodb_to_json(value: Any) -> Any:
 
 def read_tcp_json(sock: socket.socket) -> dict[str, Any]:
     # Recibe un mensaje JSON por TCP
+    """Read a JSON request from a TCP connection."""
     buffer = ""
 
     while True:
@@ -55,6 +57,7 @@ def read_tcp_json(sock: socket.socket) -> dict[str, Any]:
 
 def write_tcp_json(sock: socket.socket, payload: Any) -> None:
     # Envía una respuesta JSON por TCP
+    """Send a JSON response and finish writing to the connection."""
     message = json.dumps(payload, ensure_ascii=False) + "\n"
     sock.sendall(message.encode("utf-8"))
 

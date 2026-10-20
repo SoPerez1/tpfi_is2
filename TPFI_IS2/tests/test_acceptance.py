@@ -20,6 +20,7 @@ import time
 
 import pytest
 
+from tpfi_is2.http_transport import open_response, send_post
 from tpfi_is2.observer_client import ObserverClient
 from tpfi_is2.observer_client import main as observer_main
 from tpfi_is2.proxy import CorporateDataProxy
@@ -101,6 +102,9 @@ def test_caso_1_camino_feliz_y_auditoria(running_server: tuple[str, int]) -> Non
     observer = ObserverClient(host=host, port=port)
     assert observer.connect() is True
     assert observer.subscribe() is True
+    # Wait for the server to persist the audit entry and acknowledge subscription.
+    assert observer.socket is not None
+    observer.socket.settimeout(2)
     observer.disconnect()
 
     # 5. Auditoría: Verificar que todas las acciones impactaron en la tabla CorporateLog
@@ -176,9 +180,10 @@ def test_caso_3_requerimiento_sin_datos_minimos(running_server: tuple[str, int])
     # D) Envío directo al servidor de un JSON con campos faltantes (por socket crudo)
     with socket.create_connection((host, port)) as sock:
         # Petición get sin ID directo al servidor
-        peticion_invalida = json.dumps({"ACTION": "get", "UUID": "cpu1", "SESSION_ID": "s1"}) + "\n"
-        sock.sendall(peticion_invalida.encode("utf-8"))
-        respuesta = json.loads(sock.recv(4096).decode("utf-8"))
+        send_post(sock, {"ACTION": "get", "UUID": "cpu1", "SESSION_ID": "s1"}, host, port)
+        with open_response(sock) as response:
+            assert response.status == 400
+            respuesta = json.loads(response.read())
         assert "Error" in respuesta
 
 

@@ -6,15 +6,19 @@ import logging
 import socket
 import sys
 import uuid
+from http.client import HTTPException, RemoteDisconnected
 from typing import Any
 
 from tpfi_is2.corporate_fields import has_corporate_updates
+from tpfi_is2.http_transport import open_response, send_post
+from tpfi_is2.version import VERSION_BUILD
 
 
 class SingletonClient:
-    """Client that sends one JSON request to the server over TCP."""
+    """Client that sends one HTTP POST with a JSON body over TCP."""
 
     def __init__(self, host: str = "localhost", port: int = 8080) -> None:
+        """Initialize the component and its dependencies."""
         self.host = host
         self.port = port
 
@@ -43,11 +47,14 @@ class SingletonClient:
         logging.debug("Sending to %s:%s -> %s", self.host, self.port, request)
         try:
             with socket.create_connection((self.host, self.port), timeout=10) as sock:
-                sock.sendall(json.dumps(request).encode("utf-8"))
-                sock.shutdown(socket.SHUT_WR)
-                answer = b""
-                while chunk := sock.recv(4096):
-                    answer += chunk
+                send_post(sock, request, self.host, self.port)
+                try:
+                    with open_response(sock) as response:
+                        answer = response.read()
+                except RemoteDisconnected as exc:
+                    raise ValueError("Empty response from server") from exc
+                except HTTPException as exc:
+                    raise ValueError("Invalid JSON/HTTP response from server") from exc
         except OSError as exc:
             raise ConnectionError(f"Could not connect to server {self.host}:{self.port}") from exc
 
@@ -68,6 +75,7 @@ def main() -> None:
     parser.add_argument("-v", "--verbose", action="store_true", help="debug output")
     parser.add_argument("-s", "--server", default="localhost", help="server host")
     parser.add_argument("-p", "--port", type=int, default=8080, help="server port")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {VERSION_BUILD}")
     args = parser.parse_args()
 
     if args.verbose:

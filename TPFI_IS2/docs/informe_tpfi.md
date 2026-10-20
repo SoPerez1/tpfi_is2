@@ -73,3 +73,13 @@ El repositorio actualmente cuenta con la infraestructura base, el cliente implem
 - **Observer Client (`observer_client.py`):** El cliente que se suscribirá a las notificaciones y dejará el puerto abierto esperando actualizaciones constantes del servidor cada vez que alguien modifique los datos (`set`).
 - **Diagramas:** Construcción de Diagramas UML de Actividad y de Estado.
 - **Flujos CI/CD:** Habilitar GitHub Actions para control estricto (Ruff, Mypy, Bandit).
+
+## Actualización del protocolo de comunicación
+
+Los componentes aplicativos actuales usan HTTP POST sobre TCP para cumplir la
+mención explícita de POST en la consigna. La acción `subscribe` mantiene una
+respuesta HTTP abierta de tipo NDJSON, con confirmación inicial y una línea JSON
+por actualización. El observador vuelve a suscribirse tras una desconexión.
+El contrato, las limitaciones y los ejemplos se documentan en
+[Protocolo HTTP](protocolo_http.md). Esta sección reemplaza cualquier descripción
+anterior del transporte como JSON directo por socket.

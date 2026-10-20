@@ -31,8 +31,15 @@ fix:
 check:
     uv run --python=3.14 ruff format --check .
     uv run --python=3.14 ruff check .
+    uv run --python=3.14 black --check .
+    uv run --python=3.14 ruff check --select D src/tpfi_is2 singletonclient.py observerclient.py singletonproxyobserver.py
+    uv run --python=3.14 mypy
+    uv run --python=3.14 pyright
+    uv run --python=3.14 bandit -r src/tpfi_is2 singletonclient.py observerclient.py singletonproxyobserver.py
     uv run --python=3.14 ty check .
-    uv run --python=3.14 pytest
+    uv run --python=3.14 coverage run -m pytest
+    uv run --python=3.14 coverage combine
+    uv run --python=3.14 coverage report
 
 # Apply automatic fixes, then run the local quality gate
 fix-and-check: fix check

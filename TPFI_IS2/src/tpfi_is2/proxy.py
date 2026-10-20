@@ -16,12 +16,14 @@ class CorporateDataProxy:
         data: CorporateDataGateway | None = None,
         log: CorporateLogGateway | None = None,
     ) -> None:
+        """Initialize the component and its dependencies."""
         from tpfi_is2.storage import default_data_gateway, default_log_gateway
 
         self._data = data if data is not None else default_data_gateway()
         self._log = log if log is not None else default_log_gateway()
 
     def get(self, *, cpu_uuid: str, session_id: str, record_id: str) -> dict[str, Any]:
+        """Audit the request and retrieve a corporate record."""
         self._log.write_audit(cpu_uuid=cpu_uuid, session_id=session_id, action="get", record_id=record_id)
         item = self._data.get_record(record_id)
         if item is None:
@@ -29,6 +31,7 @@ class CorporateDataProxy:
         return item
 
     def list_all(self, *, cpu_uuid: str, session_id: str) -> list[dict[str, Any]] | dict[str, Any]:
+        """Audit the request and list corporate records."""
         self._log.write_audit(cpu_uuid=cpu_uuid, session_id=session_id, action="list")
         try:
             return self._data.list_records()
@@ -36,6 +39,7 @@ class CorporateDataProxy:
             return {"Error": str(exc)}
 
     def set_fields(self, *, cpu_uuid: str, session_id: str, record_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        """Audit the request and update the supplied corporate fields."""
         updates = corporate_updates_from_payload(payload)
         self._log.write_audit(cpu_uuid=cpu_uuid, session_id=session_id, action="set", record_id=record_id)
         try:

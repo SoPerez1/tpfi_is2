@@ -3,6 +3,7 @@
 # ///
 """Finalize release notes, tag the current version, and create a GitHub release."""
 
+import runpy
 import subprocess
 from pathlib import Path
 from typing import NamedTuple
@@ -208,7 +209,8 @@ def main() -> int:
     try:
         pyproject = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
         name = pyproject["project"]["name"]
-        version = pyproject["project"]["version"]
+        version_path = Path(pyproject["tool"]["hatch"]["version"]["path"])
+        version = runpy.run_path(str(version_path))["VERSION"]
         tag = f"v{version}"
 
         _ensure_clean_worktree()

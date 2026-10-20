@@ -3,22 +3,23 @@
 from __future__ import annotations
 
 import argparse
-import json
 import logging
 import socket
 import sys
 import threading
+from http.client import HTTPException
 from typing import Any
 
 from tpfi_is2.corporate_fields import has_corporate_updates
-from tpfi_is2.json_util import read_tcp_json, write_tcp_json
+from tpfi_is2.http_transport import HTTPRequestError, read_request, write_response
 from tpfi_is2.observer import CorporateDataObserver
 from tpfi_is2.proxy import CorporateDataProxy
 from tpfi_is2.storage import CorporateLogGateway
+from tpfi_is2.version import VERSION_BUILD
 
 
 class ProxyApplicationServer:
-    """SingletonProxyObserverTPFI: one JSON request per connection (except subscribe)."""
+    """Serve HTTP POST operations and persistent NDJSON subscriptions."""
 
     def __init__(
         self,
@@ -29,6 +30,7 @@ class ProxyApplicationServer:
         observer: CorporateDataObserver | None = None,
         log_gateway: CorporateLogGateway | None = None,
     ) -> None:
+        """Initialize the component and its dependencies."""
         self.host = host
         self.port = port
         self._proxy = proxy or CorporateDataProxy()
@@ -42,6 +44,9 @@ class ProxyApplicationServer:
         payload: dict[str, Any],
         conn: socket.socket,
     ) -> None:
+        """Dispatch a client request to the appropriate operation."""
+        response: dict[str, Any] | list[dict[str, Any]]
+
         # Obtiene los datos de la solicitud
         action = payload.get("ACTION")
         cpu_uuid = str(payload.get("UUID", ""))
@@ -57,7 +62,7 @@ class ProxyApplicationServer:
             record_id = payload.get("ID")
 
             if not record_id:
-                write_tcp_json(conn, {"Error": "get requires ID"})
+                write_response(conn, {"Error": "get requires ID"})
                 return
 
             response = self._proxy.get(
@@ -66,7 +71,7 @@ class ProxyApplicationServer:
                 record_id=str(record_id),
             )
 
-            write_tcp_json(conn, response)
+            write_response(conn, response)
             return
 
         # Lista los registros
@@ -76,7 +81,7 @@ class ProxyApplicationServer:
                 session_id=session_id,
             )
 
-            write_tcp_json(conn, response)
+            write_response(conn, response)
             return
 
         # Modifica los datos de un registro
@@ -84,11 +89,11 @@ class ProxyApplicationServer:
             record_id = payload.get("ID")
 
             if not record_id:
-                write_tcp_json(conn, {"Error": "set requires ID"})
+                write_response(conn, {"Error": "set requires ID"})
                 return
 
             if not has_corporate_updates(payload):
-                write_tcp_json(
+                write_response(
                     conn,
                     {"Error": "set requires at least one CorporateData field"},
                 )
@@ -101,7 +106,7 @@ class ProxyApplicationServer:
                 payload=payload,
             )
 
-            write_tcp_json(conn, response)
+            write_response(conn, response)
 
             # Notifica a los observadores si la modificación fue exitosa
             if "Error" not in response:
@@ -110,7 +115,7 @@ class ProxyApplicationServer:
             return
 
         # Responde si la acción no existe
-        write_tcp_json(
+        write_response(
             conn,
             {"Error": f"Unknown ACTION: {action!r}"},
         )
@@ -139,15 +144,6 @@ class ProxyApplicationServer:
         # Agrega el cliente a la lista de observadores
         self._observer.subscribe(conn, cpu_uuid)
 
-        # Confirma la suscripción
-        conn.sendall(
-            json.dumps(
-                {"status": "subscribed"},
-                ensure_ascii=False,
-            ).encode("utf-8")
-            + b"\n"
-        )
-
         try:
             # Mantiene la conexión mientras el cliente esté conectado
             while conn.recv(4096):
@@ -168,18 +164,22 @@ class ProxyApplicationServer:
     ) -> None:
         try:
             # Recibe la solicitud JSON
-            payload = read_tcp_json(conn)
+            conn.settimeout(10)
+            payload = read_request(conn)
+            conn.settimeout(None)
 
             logging.debug("Request %s", payload)
 
             # Procesa la solicitud
             self.handle_request(payload, conn)
 
-        except (ValueError, json.JSONDecodeError) as exc:
+        except (ValueError, HTTPException) as exc:
             logging.debug("Bad request: %s", exc)
 
             try:
-                write_tcp_json(conn, {"Error": str(exc)})
+                write_response(
+                    conn, {"Error": str(exc)}, status=exc.status if isinstance(exc, HTTPRequestError) else 400
+                )
             except OSError:
                 pass
 
@@ -194,16 +194,18 @@ class ProxyApplicationServer:
 
     def serve_forever(self) -> None:
         # Crea el socket TCP del servidor
+        """Accept TCP connections and dispatch them to worker threads."""
         sock = socket.socket(
             socket.AF_INET,
             socket.SOCK_STREAM,
         )
 
         # Configura el socket según el sistema operativo
-        if hasattr(socket, "SO_EXCLUSIVEADDRUSE"):
+        exclusive_address_use = getattr(socket, "SO_EXCLUSIVEADDRUSE", None)
+        if exclusive_address_use is not None:
             sock.setsockopt(
                 socket.SOL_SOCKET,
-                socket.SO_EXCLUSIVEADDRUSE,
+                exclusive_address_use,
                 1,
             )
         else:
@@ -251,6 +253,7 @@ class ProxyApplicationServer:
 
     def shutdown(self) -> None:
         # Detiene el servidor
+        """Stop accepting connections and close the listening socket."""
         self._running = False
 
         if self._listen is not None:
@@ -264,6 +267,7 @@ class ProxyApplicationServer:
 
 def main() -> None:
     # Configura los argumentos de ejecución
+    """Run the application server from command-line arguments."""
     parser = argparse.ArgumentParser(description="SingletonProxyObserverTPFI application server.")
 
     parser.add_argument(
@@ -281,6 +285,7 @@ def main() -> None:
         help="debug logging on stdout",
     )
 
+    parser.add_argument("--version", action="version", version=f"%(prog)s {VERSION_BUILD}")
     args = parser.parse_args()
 
     # Activa los mensajes de depuración

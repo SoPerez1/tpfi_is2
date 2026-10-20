@@ -7,3 +7,5 @@ Python Boilerplate contains all the boilerplate you need to create a Python pack
 - [Installation](installation.md) - how to install TPFI_IS2
 - [Usage](usage.md) - how to use TPFI_IS2
 - [API Reference](api.md) - auto-generated API documentation
+
+- [Protocolo HTTP](protocolo_http.md) - POST, respuestas JSON y suscripciones persistentes

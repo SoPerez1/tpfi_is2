@@ -1,7 +1,7 @@
 # Trabajo Práctico Final Integrador (TPFI) - Ingeniería de Software II (2024)
 **Patrones de Diseño: Proxy, Singleton y Observer en Entorno Python / AWS DynamoDB**
 
-Este proyecto implementa una arquitectura distribuida orientada a servicios para la gestión centralizada de datos corporativos (`CorporateData`) y registro auditable de accesos (`CorporateLog`), comunicándose mediante sockets TCP y soportando persistencia física en AWS DynamoDB o emulación en memoria para desarrollo local.
+Este proyecto implementa una arquitectura distribuida orientada a servicios para la gestión centralizada de datos corporativos (`CorporateData`) y registro auditable de accesos (`CorporateLog`), comunicándose mediante HTTP POST sobre sockets TCP y soportando persistencia física en AWS DynamoDB o emulación en memoria para desarrollo local.
 
 ---
 
@@ -22,7 +22,7 @@ El sistema está compuesto por tres programas ejecutables principales:
 
 3. **`observerclient.py` (Cliente Observador)**
    - Se suscribe al servidor mediante la acción `subscribe`.
-   - Mantiene la conexión TCP abierta a la espera de notificaciones de cambios en `CorporateData`.
+   - Mantiene una respuesta HTTP abierta con notificaciones NDJSON de cambios en `CorporateData`.
    - Dispone de lógica de reconexión automática periódica (cada 30 segundos) si la conexión con el servidor se interrumpe.
 
 ---
@@ -138,3 +138,59 @@ bandit -r src/
 
 ## 📄 Licencia
 Este proyecto está bajo la Licencia MIT - ver el archivo [`LICENSE`](LICENSE) para más detalles.
+
+### Controles completos de la consigna
+
+Instalar las herramientas con `uv sync` y ejecutar `just check`, o usar los
+comandos siguientes desde la raíz del proyecto:
+
+```bash
+uv run ruff check .
+uv run ruff format --check .
+uv run black --check .
+uv run ruff check --select D src/tpfi_is2 singletonclient.py observerclient.py singletonproxyobserver.py
+uv run mypy
+uv run pyright
+uv run bandit -r src/tpfi_is2 singletonclient.py observerclient.py singletonproxyobserver.py
+uv run coverage run -m pytest
+uv run coverage combine
+uv run coverage report
+```
+
+La verificación PEP257 usa las reglas `D` de Ruff con la convención `pep257`.
+Ruff también verifica PEP8 mediante sus reglas `E` y `W`. MyPy, PyRight,
+PEP257 y Bandit cubren el paquete aplicativo `src/tpfi_is2` y los tres puntos
+de entrada. Los módulos `cli.py` y `__main__.py` del paquete son plantillas
+Cookiecutter ajenas a los tres programas del TP y se excluyen del análisis de tipos.
+Black y Ruff verifican también las pruebas; los ejemplos docentes de
+`tests/sources` y `src/IS2_TPFI_test.py` quedan fuera de formato/lint.
+
+GitHub Actions ejecuta estos controles en cada PR y push a `main`. Cualquier
+error bloquea el resultado `All checks pass`, incluida una cobertura inferior al 85 %.
+
+### VERSION y BUILD
+
+El registro versionado está en `src/tpfi_is2/version.py`: `VERSION` identifica la
+versión funcional y `BUILD` identifica la entrega dentro de esa versión. La
+entrega inicial es `0.1.0 (build 1)`. Incrementar `BUILD` al preparar otra entrega
+de la misma versión; al cambiar `__version__`, reiniciar `BUILD` en 1.
+El empaquetado y el script de release toman la versión de ese mismo módulo.
+
+Los tres programas permiten consultarlos sin iniciar conexiones ni necesitar AWS:
+
+```bash
+python singletonclient.py --version
+python observerclient.py --version
+python singletonproxyobserver.py --version
+```
+
+### HTTP POST y respuesta persistente
+
+Los tres programas envían sus operaciones mediante `POST /` con cuerpo JSON.
+Las consultas responden JSON y cierran la conexión; las suscripciones mantienen
+una respuesta HTTP abierta con un objeto JSON por línea (NDJSON).
+La confirmación de suscripción se procesa internamente y el observador muestra
+las actualizaciones recibidas. Se conservan los argumentos CLI y los archivos de
+entrada. Actualizar juntos servidor y clientes al migrar desde JSON directo por TCP.
+
+Ver [contrato HTTP, ejemplos curl y reconexión](docs/protocolo_http.md).

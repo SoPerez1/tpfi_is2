@@ -129,7 +129,7 @@ bandit -r src/
 ---
 
 ## 📚 Documentación Adicional
-- [`docs/diagramas_uml.md`](docs/diagramas_uml.md): Diagrama UML de Actividad (Proxy) y de Estado (Observer).
+- [`docs/diagramas_uml.md`](docs/diagramas_uml.md): diagramas UML de actividad (Proxy) y estados (Observer).
 - [`docs/informe_tpfi.md`](docs/informe_tpfi.md): Informe de implementación detallado del TPFI.
 - [`CHANGELOG.md`](CHANGELOG.md): Historial de versiones y cambios del sistema.
 - [`CONTEXT.md`](CONTEXT.md): Bitácora de prompts utilizados durante el desarrollo asistido con IA.

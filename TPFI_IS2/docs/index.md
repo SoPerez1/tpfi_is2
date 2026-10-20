@@ -1,9 +1,12 @@
 # TPFI_IS2
 
-Python Boilerplate contains all the boilerplate you need to create a Python package.
+Implementacion del Trabajo Practico Final Integrador de Ingenieria de Software II,
+con los patrones Proxy, Singleton y Observer.
 
-## Getting started
+## Documentacion
 
-- [Installation](installation.md) - how to install TPFI_IS2
-- [Usage](usage.md) - how to use TPFI_IS2
-- [API Reference](api.md) - auto-generated API documentation
+- [Instalacion](installation.md)
+- [Uso](usage.md)
+- [Diagramas UML](diagramas_uml.md): diagramas de actividad del Proxy y de estados del Observer
+- [Informe de implementacion](informe_tpfi.md)
+- [Referencia de la API](api.md)

@@ -74,12 +74,22 @@ El repositorio actualmente cuenta con la infraestructura base, el cliente implem
 - **Diagramas:** Construcción de Diagramas UML de Actividad y de Estado.
 - **Flujos CI/CD:** Habilitar GitHub Actions para control estricto (Ruff, Mypy, Bandit).
 
-## Actualización del protocolo de comunicación
 
-Los componentes aplicativos actuales usan HTTP POST sobre TCP para cumplir la
-mención explícita de POST en la consigna. La acción `subscribe` mantiene una
-respuesta HTTP abierta de tipo NDJSON, con confirmación inicial y una línea JSON
-por actualización. El observador vuelve a suscribirse tras una desconexión.
-El contrato, las limitaciones y los ejemplos se documentan en
-[Protocolo HTTP](protocolo_http.md). Esta sección reemplaza cualquier descripción
-anterior del transporte como JSON directo por socket.
+## Diagramas de diseño
+
+### Diagrama de actividad: patrón Proxy
+
+![Diagrama de actividad del servidor para list, get y set](img/diagrama_actividad_proxy.png)
+
+El diagrama muestra el flujo que sigue el servidor al recibir un pedido:
+valida el JSON, registra la acción en CorporateLog y ejecuta get, list o set
+sobre CorporateData. Luego envía la respuesta y cierra la conexión. En el
+caso de set, además notifica a los clientes suscriptos.
+
+### Diagrama de estado: patrón Observer
+
+![Diagrama de estado de una suscripción](img/diagrama_estado_observer.png)
+
+El diagrama muestra los estados de una suscripción: No suscripto, Suscripto
+y Notificando, y los eventos que provocan cada cambio (subscribe, set,
+socket cerrado, falla de envío).

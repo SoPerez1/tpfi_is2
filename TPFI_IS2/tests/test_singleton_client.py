@@ -12,6 +12,7 @@ from typing import Any
 
 import pytest
 
+from tpfi_is2.http_transport import read_request, write_response
 from tpfi_is2.singleton_client import SingletonClient, main
 
 
@@ -29,11 +30,9 @@ def server() -> Generator[tuple[str, int], None, None]:
             except OSError:
                 return  # socket closed by the fixture
             with conn:
-                data = b""
-                while chunk := conn.recv(4096):
-                    data += chunk
-                reply = {"status": "OK", "received": json.loads(data)}
-                conn.sendall(json.dumps(reply).encode("utf-8"))
+                request = read_request(conn)
+                reply = {"status": "OK", "received": request}
+                write_response(conn, reply)
 
     threading.Thread(target=serve, daemon=True).start()
     host, port = srv.getsockname()
@@ -116,7 +115,7 @@ def test_send_empty_response() -> None:
         def serve_empty() -> None:
             conn, _ = srv.accept()
             with conn:
-                assert conn.recv(4096)
+                read_request(conn)
                 conn.shutdown(socket.SHUT_WR)
 
         threading.Thread(target=serve_empty, daemon=True).start()
@@ -135,8 +134,8 @@ def test_send_invalid_json_response(closed_port: int) -> None:
         def respond_garbage() -> None:
             conn, _ = srv.accept()
             with conn:
-                conn.recv(4096)
-                conn.sendall(b"not-json")
+                read_request(conn)
+                conn.sendall(b"HTTP/1.1 200 OK\r\nContent-Length: 8\r\n\r\nnot-json")
             srv.close()
 
         threading.Thread(target=respond_garbage, daemon=True).start()

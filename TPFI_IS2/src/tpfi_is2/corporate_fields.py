@@ -28,5 +28,5 @@ def corporate_updates_from_payload(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def has_corporate_updates(payload: dict[str, Any]) -> bool:
-    """True if payload carries at least one CorporateData field to write."""
+    """Return whether the payload contains a CorporateData field to write."""
     return bool(corporate_updates_from_payload(payload))

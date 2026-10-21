@@ -11,22 +11,16 @@ from typing import Any
 
 import pytest
 
+from tpfi_is2.http_transport import open_response, send_post
 from tpfi_is2.observer_client import ObserverClient
 from tpfi_is2.proxy import CorporateDataProxy
 from tpfi_is2.proxy_server import ProxyApplicationServer
+from tpfi_is2.singleton_client import SingletonClient
 from tpfi_is2.storage import MemoryCorporateDataGateway, MemoryCorporateLogGateway
 
 
 def send_request(host: str, port: int, payload: dict[str, Any]) -> Any:
-    with socket.create_connection((host, port), timeout=5) as sock:
-        sock.sendall(json.dumps(payload).encode("utf-8"))
-        sock.shutdown(socket.SHUT_WR)
-
-        data = b""
-        while chunk := sock.recv(4096):
-            data += chunk
-
-    return json.loads(data.decode("utf-8"))
+    return SingletonClient(host, port).send(payload)
 
 
 @pytest.fixture
@@ -218,48 +212,13 @@ def test_observer_notified_with_socket(
         with socket.create_connection((host, port), timeout=5) as sock:
             sock.settimeout(0.5)
 
-            # Envía la suscripción terminada en salto de línea
-            sock.sendall(
-                (
-                    json.dumps(
-                        {
-                            "UUID": "obs-1",
-                            "SESSION_ID": "s-obs",
-                            "ACTION": "subscribe",
-                        }
-                    )
-                    + "\n"
-                ).encode("utf-8")
-            )
-
-            buffer = ""
-            deadline = time.time() + 5
-
-            while time.time() < deadline:
-                try:
-                    chunk = sock.recv(4096)
-                except TimeoutError:
-                    continue
-
-                if not chunk:
-                    break
-
-                buffer += chunk.decode("utf-8")
-
-                while "\n" in buffer:
-                    line, buffer = buffer.split("\n", 1)
-
-                    if not line.strip():
-                        continue
-
-                    message = json.loads(line)
-                    received.append(message)
-
-                    if message.get("status") == "subscribed":
-                        subscribed.set()
-
-                if len(received) >= 2:
-                    return
+            send_post(sock, {"UUID": "obs-1", "SESSION_ID": "s-obs", "ACTION": "subscribe"}, host, port)
+            with open_response(sock) as response:
+                assert response.status == 200
+                assert response.headers.get_content_type() == "application/x-ndjson"
+                received.append(json.loads(response.readline()))
+                subscribed.set()
+                received.append(json.loads(response.readline()))
 
     threading.Thread(
         target=subscriber,
@@ -287,3 +246,67 @@ def test_observer_notified_with_socket(
 
     assert len(received) >= 2
     assert received[-1]["sede"] == "FCyT"
+
+
+def test_standard_http_client_and_multiple_notifications(memory_backend: tuple[str, int]) -> None:
+    """Use the standard HTTP parser to verify finite and streamed response framing."""
+    from http.client import HTTPConnection
+
+    host, port = memory_backend
+    observer = HTTPConnection(host, port, timeout=3)
+    observer.request(
+        "POST",
+        "/",
+        json.dumps({"ACTION": "subscribe", "UUID": "http", "SESSION_ID": "s"}),
+        {"Content-Type": "application/json"},
+    )
+    stream = observer.getresponse()
+    assert stream.status == 200
+    assert stream.headers.get_content_type() == "application/x-ndjson"
+    assert json.loads(stream.readline()) == {"status": "subscribed"}
+    try:
+        for name in ("Concepción del Uruguay", "Paraná"):
+            client = HTTPConnection(host, port, timeout=3)
+            client.request(
+                "POST",
+                "/",
+                json.dumps({"ACTION": "set", "ID": "HTTP", "localidad": name}),
+                {"Content-Type": "application/json"},
+            )
+            response = client.getresponse()
+            body = response.read()
+            assert response.status == 200
+            assert int(response.headers["Content-Length"]) == len(body)
+            assert json.loads(body)["localidad"] == name
+            assert json.loads(stream.readline()) == json.loads(body)
+            client.close()
+    finally:
+        stream.close()
+        observer.close()
+
+
+@pytest.mark.parametrize(
+    ("http_request", "status"),
+    [
+        (b"garbage\r\n\r\n", 400),
+        (b"GET / HTTP/1.1\r\n\r\n", 405),
+        (b"POST /missing HTTP/1.1\r\n\r\n", 404),
+        (b"POST / HTTP/1.1\r\nTransfer-Encoding: chunked\r\n\r\n", 400),
+        (b"POST / HTTP/1.1\r\n\r\n", 411),
+        (b"POST / HTTP/1.1\r\nContent-Length: x\r\n\r\n", 400),
+        (b"POST / HTTP/1.1\r\nContent-Length: -1\r\n\r\n", 413),
+        (b"POST / HTTP/1.1\r\nContent-Length: 1048577\r\n\r\n", 413),
+        (b"POST / HTTP/1.1\r\nContent-Length: 2\r\nContent-Type: text/plain\r\n\r\n{}", 415),
+        (b"POST / HTTP/1.1\r\nContent-Length: 4\r\nContent-Type: application/json\r\n\r\n{}", 400),
+        (b"POST / HTTP/1.1\r\nContent-Length: 2\r\nContent-Type: application/json\r\n\r\n[]", 400),
+        (b"POST / HTTP/1.1\r\nContent-Length: 1\r\nContent-Type: application/json\r\n\r\n{", 400),
+    ],
+)
+def test_http_rejects_invalid_requests(memory_backend: tuple[str, int], http_request: bytes, status: int) -> None:
+    """Reject invalid HTTP envelopes and JSON bodies with structured errors."""
+    with socket.create_connection(memory_backend, timeout=3) as sock:
+        sock.sendall(http_request)
+        sock.shutdown(socket.SHUT_WR)
+        with open_response(sock) as response:
+            assert response.status == status
+            assert "Error" in json.loads(response.read())

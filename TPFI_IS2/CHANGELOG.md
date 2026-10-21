@@ -3,6 +3,19 @@
 Todos los cambios notables de este proyecto están documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [Unreleased]
+
+### Cambiado
+- Transporte de los tres programas a HTTP POST con cuerpos JSON y respuestas HTTP.
+- Suscripción con respuesta persistente NDJSON y reconexión mediante nuevo POST.
+- Pruebas de compatibilidad con clientes HTTP estándar, errores y UTF-8 fragmentado.
+
+### Agregado
+- Registro central de VERSION y BUILD y opción `--version` en los tres programas.
+- Controles obligatorios de Black, MyPy, PyRight, PEP257 (Ruff) y Bandit en CI y `just check`.
+- Dependencias de calidad en los grupos de desarrollo y boto3 como dependencia de ejecución.
+- Docstrings PEP257 para las interfaces y operaciones del aplicativo.
+
 ## [0.1.0] - 2026-10-13
 
 ### Agregado

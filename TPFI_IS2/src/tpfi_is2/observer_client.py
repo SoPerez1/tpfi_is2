@@ -5,14 +5,19 @@ import json
 import logging
 import socket
 import sys
+import threading
 import time
 import uuid
+from http.client import HTTPException, HTTPResponse
 from pathlib import Path
 from typing import Any
 
+from tpfi_is2.http_transport import open_response, send_post
+from tpfi_is2.version import VERSION_BUILD
+
 
 class ObserverClient:
-    """TCP client that subscribes to CorporateData change notifications."""
+    """HTTP client that subscribes to a persistent NDJSON response."""
 
     def __init__(
         self,
@@ -22,12 +27,16 @@ class ObserverClient:
         retry_interval: float = 30.0,
         verbose: bool = False,
     ) -> None:
+        """Initialize the component and its dependencies."""
         self.host = host
         self.port = port
         self.output_file = Path(output_file) if output_file else None
         self.retry_interval = retry_interval
         self.verbose = verbose
         self.socket: socket.socket | None = None
+        self._response: HTTPResponse | None = None
+        self._disconnect_lock = threading.Lock()
+        self._response_lock = threading.Lock()
         self.uuid = str(uuid.getnode())
         self.session_id = str(uuid.uuid4())
         self.running = False
@@ -51,13 +60,19 @@ class ObserverClient:
 
     def disconnect(self) -> None:
         """Close TCP socket connection."""
-        if self.socket is not None:
+        with self._disconnect_lock:
+            sock, self.socket = self.socket, None
+            response, self._response = self._response, None
+        if sock is not None:
             try:
-                self.socket.close()
+                sock.shutdown(socket.SHUT_RDWR)
             except OSError:
                 pass
-            self.socket = None
+            sock.close()
             logging.info("Disconnected from server")
+        if response is not None:
+            with self._response_lock:
+                response.close()
 
     def subscribe(self) -> bool:
         """Send subscription JSON request to the server."""
@@ -72,43 +87,41 @@ class ObserverClient:
         }
 
         try:
-            message = json.dumps(request, ensure_ascii=False) + "\n"
-            self.socket.sendall(message.encode("utf-8"))
+            self.socket.settimeout(10)
+            send_post(self.socket, request, self.host, self.port)
+            self._response = open_response(self.socket)
+            if self._response.status != 200 or self._response.headers.get_content_type() != "application/x-ndjson":
+                raise ValueError("Server rejected the notification stream")
+            if json.loads(self._response.readline()) != {"status": "subscribed"}:
+                raise ValueError("Missing subscription confirmation")
+            self.socket.settimeout(None)
             logging.info("Subscription request sent for UUID=%s", self.uuid)
             return True
-        except OSError as error:
+        except (OSError, HTTPException, ValueError) as error:
             logging.error("Failed to send subscription: %s", error)
             self.disconnect()
             return False
 
     def listen(self) -> bool:
         """Listen for incoming JSON notifications from the server."""
-        if self.socket is None:
+        response = self._response
+        if response is None:
             return False
-
-        buffer = ""
         try:
             while self.running:
-                data = self.socket.recv(4096)
-                if not data:
+                with self._response_lock:
+                    line = response.readline()
+                if not line:
                     logging.info("Server closed connection")
                     return False
-
-                buffer += data.decode("utf-8")
-                while "\n" in buffer:
-                    line, buffer = buffer.split("\n", 1)
-                    if not line.strip():
-                        continue
-                    try:
-                        notification = json.loads(line)
-                        self.notify(notification)
-                    except json.JSONDecodeError:
-                        logging.warning("Received invalid JSON line: %r", line)
-
-        except (OSError, UnicodeDecodeError) as error:
+                try:
+                    notification = json.loads(line)
+                    self.notify(notification)
+                except (ValueError, UnicodeDecodeError):
+                    logging.warning("Received invalid JSON line: %r", line)
+        except (OSError, HTTPException, ValueError) as error:
             logging.error("Error receiving notifications: %s", error)
             return False
-
         return True
 
     def notify(self, notification: dict[str, Any]) -> None:
@@ -159,6 +172,7 @@ def main() -> None:
         help="Reconnection retry interval in seconds (default: 30)",
     )
 
+    parser.add_argument("--version", action="version", version=f"%(prog)s {VERSION_BUILD}")
     args = parser.parse_args()
 
     client = ObserverClient(

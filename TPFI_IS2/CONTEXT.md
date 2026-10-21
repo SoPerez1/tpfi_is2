@@ -48,3 +48,15 @@ Este documento registra los prompts y contextos utilizados en la asistencia de h
   - Documentación generada con `pdoc` en `docs/html/`.
   - Normalización de archivos del repositorio: `REQUIREMENTS.TXT`, `CHANGELOG.md` y `README.md`.
 
+
+## 7. Controles exigidos por la consigna
+- **Prompt:** "podes implementar esto?", referido a completar Black, MyPy, PyRight, PEP257 y Bandit en CI.
+- **Resultado:** Configuración de dependencias, controles obligatorios en GitHub Actions y comandos locales; documentación PEP257 y ajustes de tipos en el aplicativo.
+
+## 8. Registro de VERSION y BUILD
+- **Prompt:** Revisar VERSION y BUILD y agregar un registro explícito de BUILD.
+- **Resultado:** Módulo de versión compartido, número de entrega y opción `--version` en los tres programas; empaquetado y release usan la misma fuente de versión.
+
+## 9. HTTP POST y notificaciones persistentes
+- **Prompt:** "hagamos esto", referido a implementar HTTP POST y mantener una respuesta persistente para los observadores, documentando la decisión.
+- **Resultado:** Transporte HTTP compartido, adaptación de clientes y servidor, respuesta NDJSON para suscripciones y pruebas de interoperabilidad, errores, reconexión y Unicode.

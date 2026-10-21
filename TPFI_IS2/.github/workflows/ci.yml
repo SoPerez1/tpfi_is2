@@ -34,6 +34,12 @@ jobs:
       - name: Ruff format check
         run: uv run ruff format --check .
 
+      - name: Black format check
+        run: uv run black --check .
+
+      - name: PEP257 docstrings
+        run: uv run ruff check --select D src/tpfi_is2 singletonclient.py observerclient.py singletonproxyobserver.py
+
       - name: Ruff lint
         run: uv run ruff check .
 
@@ -49,8 +55,29 @@ jobs:
 
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
+      - name: Type check with MyPy
+        run: uv run mypy
+
+      - name: Type check with PyRight
+        run: uv run pyright
+
       - name: Type check with ty
         run: uv run ty check .
+
+  security:
+    name: Bandit security
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Bandit
+        run: uv run bandit -r src/tpfi_is2 singletonclient.py observerclient.py singletonproxyobserver.py
 
   test:
     name: Test (Python ${{ matrix.python-version }})
@@ -110,7 +137,7 @@ jobs:
   all-checks-pass:
     name: All checks pass
     if: always()
-    needs: [lint, type-check, test, coverage]
+    needs: [lint, type-check, security, test, coverage]
     runs-on: ubuntu-latest
     steps:
       - name: Check job results

@@ -13,14 +13,24 @@ from tpfi_is2.json_util import dynamodb_to_json
 
 
 class CorporateDataGateway(Protocol):
-    def get_record(self, record_id: str) -> dict[str, Any] | None: ...
+    """Define the persistence operations for corporate records."""
 
-    def merge_record(self, record_id: str, updates: dict[str, Any]) -> dict[str, Any]: ...
+    def get_record(self, record_id: str) -> dict[str, Any] | None:
+        """Return the record identified by its key, if present."""
+        ...
 
-    def list_records(self) -> list[dict[str, Any]]: ...
+    def merge_record(self, record_id: str, updates: dict[str, Any]) -> dict[str, Any]:
+        """Merge supplied fields into a record and return the result."""
+        ...
+
+    def list_records(self) -> list[dict[str, Any]]:
+        """Return all corporate records."""
+        ...
 
 
 class CorporateLogGateway(Protocol):
+    """Define the persistence operation for audit entries."""
+
     def write_audit(
         self,
         *,
@@ -28,7 +38,9 @@ class CorporateLogGateway(Protocol):
         session_id: str,
         action: str,
         record_id: str | None = None,
-    ) -> None: ...
+    ) -> None:
+        """Record the requesting CPU, session, action, and timestamp."""
+        ...
 
 
 def _blank_record(record_id: str) -> dict[str, Any]:
@@ -65,11 +77,13 @@ class MemoryCorporateDataGateway:
     _lock = threading.Lock()
 
     def __init__(self) -> None:
+        """Initialize the component and its dependencies."""
         self._records: dict[str, dict[str, Any]] = {}
         self._records_lock = threading.Lock()
 
     @classmethod
     def instance(cls) -> MemoryCorporateDataGateway:
+        """Return the shared instance, creating it when necessary."""
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
@@ -78,15 +92,18 @@ class MemoryCorporateDataGateway:
 
     @classmethod
     def reset(cls) -> None:
+        """Discard the shared instance for isolated tests."""
         with cls._lock:
             cls._instance = None
 
     def get_record(self, record_id: str) -> dict[str, Any] | None:
+        """Return the record identified by its key, if present."""
         with self._records_lock:
             item = self._records.get(record_id)
             return dict(item) if item else None
 
     def merge_record(self, record_id: str, updates: dict[str, Any]) -> dict[str, Any]:
+        """Merge supplied fields into a record and return the result."""
         with self._records_lock:
             existing = self._records.get(record_id)
             merged = _merge_item(existing, record_id, updates)
@@ -94,6 +111,7 @@ class MemoryCorporateDataGateway:
             return dict(merged)
 
     def list_records(self) -> list[dict[str, Any]]:
+        """Return all corporate records."""
         with self._records_lock:
             return [dict(item) for item in self._records.values()]
 
@@ -105,11 +123,13 @@ class MemoryCorporateLogGateway:
     _lock = threading.Lock()
 
     def __init__(self) -> None:
+        """Initialize the component and its dependencies."""
         self._entries: list[dict[str, Any]] = []
         self._entries_lock = threading.Lock()
 
     @classmethod
     def instance(cls) -> MemoryCorporateLogGateway:
+        """Return the shared instance, creating it when necessary."""
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
@@ -118,6 +138,7 @@ class MemoryCorporateLogGateway:
 
     @classmethod
     def reset(cls) -> None:
+        """Discard the shared instance for isolated tests."""
         with cls._lock:
             cls._instance = None
 
@@ -129,6 +150,7 @@ class MemoryCorporateLogGateway:
         action: str,
         record_id: str | None = None,
     ) -> None:
+        """Record the requesting CPU, session, action, and timestamp."""
         entry = {
             "id": str(uuid.uuid4()),
             "CPUid": cpu_uuid,
@@ -143,6 +165,7 @@ class MemoryCorporateLogGateway:
 
     @property
     def entries(self) -> list[dict[str, Any]]:
+        """Return a snapshot of the recorded audit entries."""
         with self._entries_lock:
             return list(self._entries)
 
@@ -154,12 +177,16 @@ class AwsCorporateDataSingleton:
     _lock = threading.Lock()
 
     def __init__(self) -> None:
+        """Initialize the component and its dependencies."""
         import boto3
 
-        self._table = boto3.resource("dynamodb").Table("CorporateData")
+        # Boto3 creates resource methods dynamically from the AWS service model.
+        resource: Any = boto3.resource("dynamodb")
+        self._table = resource.Table("CorporateData")
 
     @classmethod
     def instance(cls) -> AwsCorporateDataSingleton:
+        """Return the shared instance, creating it when necessary."""
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
@@ -167,17 +194,20 @@ class AwsCorporateDataSingleton:
         return cls._instance
 
     def get_record(self, record_id: str) -> dict[str, Any] | None:
+        """Return the record identified by its key, if present."""
         response = self._table.get_item(Key={"id": record_id})
         item = response.get("Item")
         return dynamodb_to_json(item) if item else None
 
     def merge_record(self, record_id: str, updates: dict[str, Any]) -> dict[str, Any]:
+        """Merge supplied fields into a record and return the result."""
         existing = self.get_record(record_id)
         merged = _merge_item(existing, record_id, updates)
         self._table.put_item(Item=_to_dynamo(merged))
         return merged
 
     def list_records(self) -> list[dict[str, Any]]:
+        """Return all corporate records."""
         items: list[dict[str, Any]] = []
         response = self._table.scan()
         items.extend(dynamodb_to_json(i) for i in response.get("Items", []))
@@ -194,12 +224,16 @@ class AwsCorporateLogSingleton:
     _lock = threading.Lock()
 
     def __init__(self) -> None:
+        """Initialize the component and its dependencies."""
         import boto3
 
-        self._table = boto3.resource("dynamodb").Table("CorporateLog")
+        # Boto3 creates resource methods dynamically from the AWS service model.
+        resource: Any = boto3.resource("dynamodb")
+        self._table = resource.Table("CorporateLog")
 
     @classmethod
     def instance(cls) -> AwsCorporateLogSingleton:
+        """Return the shared instance, creating it when necessary."""
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
@@ -214,6 +248,7 @@ class AwsCorporateLogSingleton:
         action: str,
         record_id: str | None = None,
     ) -> None:
+        """Record the requesting CPU, session, action, and timestamp."""
         entry: dict[str, Any] = {
             "id": str(uuid.uuid4()),
             "CPUid": cpu_uuid,
@@ -227,6 +262,7 @@ class AwsCorporateLogSingleton:
 
 
 def default_data_gateway() -> CorporateDataGateway:
+    """Select the corporate data gateway for the configured environment."""
     import os
 
     if os.environ.get("TPFI_USE_MEMORY", "").lower() in ("1", "true", "yes"):
@@ -235,6 +271,7 @@ def default_data_gateway() -> CorporateDataGateway:
 
 
 def default_log_gateway() -> CorporateLogGateway:
+    """Select the audit gateway for the configured environment."""
     import os
 
     if os.environ.get("TPFI_USE_MEMORY", "").lower() in ("1", "true", "yes"):

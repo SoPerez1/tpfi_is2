@@ -45,7 +45,8 @@ def test_yaml_parser_is_declared_in_the_test_dependency_group():
 
 
 def test_docs_workflow_builds_on_pr_and_deploys_only_after_gated_main_events():
-    workflow = yaml.load((ROOT / ".github/workflows/docs.yml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+    workflow_path = ROOT.parent / ".github/workflows/docs.yml"
+    workflow = yaml.load(workflow_path.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
     assert "pull_request" in workflow["on"]
     assert "workflow_dispatch" in workflow["on"]  # Preserve manual validation.
     assert "main" in workflow["on"]["push"]["branches"]
@@ -72,7 +73,7 @@ def test_docs_workflow_builds_on_pr_and_deploys_only_after_gated_main_events():
     for step in page_steps:
         assert step["if"] == allowed_deployment
         if "actions/upload-pages-artifact@" in step["uses"]:
-            assert step["with"]["path"] == "site"
+            assert step["with"]["path"] == "TPFI_IS2/site"
     deploy = workflow["jobs"]["deploy"]
     assert deploy["needs"] == "build"
     assert deploy["if"] == allowed_deployment

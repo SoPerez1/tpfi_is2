@@ -1,11 +1,18 @@
-# TPFI_IS2
+# TPFI IS2
 
-Python Boilerplate contains all the boilerplate you need to create a Python package.
+Servidor y clientes Python que aplican Proxy, Singleton y Observer para
+operaciones corporativas con auditoría. El backend local en memoria permite
+probar el flujo sin credenciales AWS.
 
-## Getting started
+## Empezar
 
-- [Installation](installation.md) - how to install TPFI_IS2
-- [Usage](usage.md) - how to use TPFI_IS2
-- [API Reference](api.md) - auto-generated API documentation
+1. [Instalación](installation.md) — preparar el entorno.
+2. [Uso local](usage.md) — iniciar servidor, observador y cliente.
+3. [Protocolo HTTP](protocolo_http.md) — solicitudes JSON y flujo NDJSON.
 
-- [Protocolo HTTP](protocolo_http.md) - POST, respuestas JSON y suscripciones persistentes
+## Diseño y evidencia
+
+- [Diagramas UML](diagramas_uml.md) — actividad del Proxy y estados del Observer.
+- [Informe](informe_tpfi.md) — componentes actuales, resultados locales y pruebas AWS manuales.
+- [Validación AWS](validacion_aws.md) — resultados manuales confirmados y límites del alcance autorizado.
+- [Referencia de API](api.md) — módulos aplicativos generados con pdoc.

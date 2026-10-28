@@ -102,7 +102,10 @@ python singletonclient.py -i=input_list.json
 
 ## 🧪 Pruebas Automatizadas y Calidad de Código
 
-El proyecto cuenta con un conjunto exhaustivo de pruebas automatizadas y controles estáticos:
+El proyecto cuenta con pruebas automatizadas y controles estáticos. La ejecución
+local (Python 3.10, gateway en memoria) terminó con **71 pruebas aprobadas en
+44,87 s** y cobertura con ramas del **89,64 %**. Esta suite no valida AWS;
+las pruebas manuales en la nube se describen por separado en el informe.
 
 ### 1. Ejecución de Tests con Cobertura ($\ge 85\%$)
 ```bash
@@ -129,8 +132,11 @@ bandit -r src/
 ---
 
 ## 📚 Documentación Adicional
-- [`docs/diagramas_uml.md`](docs/diagramas_uml.md): Diagrama UML de Actividad (Proxy) y de Estado (Observer).
-- [`docs/informe_tpfi.md`](docs/informe_tpfi.md): Informe de implementación detallado del TPFI.
+- [`docs/diagramas_uml.md`](docs/diagramas_uml.md): diagramas UML de [actividad del Proxy](docs/img/diagrama_actividad_proxy.png) y [estados del Observer](docs/img/diagrama_estado_observer.png).
+- [`docs/informe_tpfi.md`](docs/informe_tpfi.md): componentes actuales, resultados locales y validación AWS manual.
+- [`docs/usage.md`](docs/usage.md): uso de los tres programas ejecutables.
+- [`docs/api.md`](docs/api.md): API aplicativa generada con pdoc y publicada junto con el sitio Zensical.
+- [`docs/validacion_aws.md`](docs/validacion_aws.md): alcance, resultados manuales y limitaciones de la prueba AWS; nuevas escrituras requieren autorización.
 - [`CHANGELOG.md`](CHANGELOG.md): Historial de versiones y cambios del sistema.
 - [`CONTEXT.md`](CONTEXT.md): Bitácora de prompts utilizados durante el desarrollo asistido con IA.
 

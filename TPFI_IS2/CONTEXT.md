@@ -60,3 +60,13 @@ Este documento registra los prompts y contextos utilizados en la asistencia de h
 ## 9. HTTP POST y notificaciones persistentes
 - **Prompt:** "hagamos esto", referido a implementar HTTP POST y mantener una respuesta persistente para los observadores, documentando la decisión.
 - **Resultado:** Transporte HTTP compartido, adaptación de clientes y servidor, respuesta NDJSON para suscripciones y pruebas de interoperabilidad, errores, reconexión y Unicode.
+
+## 10. Entrega documental local
+- **Mensajes exactos del usuario:** "podes visualizar el pdf IS2_TPFI?? en donde se plantea todo el trabajo, y necesito saber si viene todo listo, o si faltan cosas"; "perfecto, como puedo seguir para completar con lo que falta?"; aprobación del plan: "okey, hagamos".
+- **Autorización de lectura:** "autorizar" permitió consultar material instalado; no autorizó credenciales, operaciones AWS ni publicaciones.
+- **Resultado local previo a esta edición:** 68 pruebas aprobadas en Python 3.10 y cobertura de ramas 89,64241676942046 % con gateways en memoria. Se actualizó el informe, se enlazaron ambos diagramas UML y se integró pdoc con la generación del sitio Zensical. En ese momento la validación AWS estaba pendiente de elegir y autorizar un ID de prueba.
+
+## 11. Pruebas AWS guiadas por consola
+- **Prompt exacto del usuario:** "quiero hacer las prubas por consola". Autorizó después la prueba controlada sobre un único ID y sus entradas de auditoría.
+- **Resultado:** El usuario confirmó suscripción, creación, consulta, actualización parcial, notificaciones, listado y auditoría sobre `TPFI-VALIDACION-IS2-MICAELA-01`. Son confirmaciones manuales, separadas de las 71 pruebas automatizadas locales y del 89,64 % de cobertura.
+- **Límites:** No se mostraron ni guardaron credenciales; no se eliminaron registros. Un primer `get` por CLI falló y una consulta posterior con el mismo cliente funcionó; la causa inicial no se determinó. No se afirma ejecución de GitHub Actions ni una suite automatizada contra AWS.

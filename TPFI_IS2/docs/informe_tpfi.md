@@ -1,85 +1,83 @@
-# Informe de Implementación - TPFI IS2 (2024)
-**Patrón Proxy/Singleton/Observer en entorno AWS**
+# Informe de implementación del TPFI IS2
 
-Este documento detalla el progreso e historia de las implementaciones realizadas en este repositorio para el Trabajo Práctico Final Integrador de la materia Ingeniería de Software II.
+El sistema implementa Proxy, Singleton y Observer con transporte HTTP POST sobre
+sockets TCP. La validación local usa memoria: **no constituye evidencia de
+conexión ni de escritura en AWS DynamoDB**.
 
-## 1. Configuración Inicial del Entorno
+## Componentes entregados
 
-### Entorno Virtual
-Se estableció un entorno virtual de Python (`.venv`) para aislar las dependencias del proyecto. Todas las tareas de desarrollo y pruebas se ejecutan dentro de este entorno para garantizar la reproducibilidad y evitar conflictos a nivel de sistema. Como se vio en terminales anteriores, el entorno se activa con `source .venv/bin/activate`.
+| Programa | Implementación actual | Responsabilidad |
+| --- | --- | --- |
+| `singletonproxyobserver.py` | `tpfi_is2.proxy_server.ProxyApplicationServer` | Atiende `get`, `set`, `list` y `subscribe`; audita las operaciones y notifica las modificaciones. |
+| `singletonclient.py` | `tpfi_is2.singleton_client.SingletonClient` | Valida las solicitudes, agrega UUID y sesión, y envía un POST JSON. |
+| `observerclient.py` | `tpfi_is2.observer_client.ObserverClient` | Se suscribe a NDJSON y vuelve a conectar tras una interrupción. |
 
-### Estructura Base (Cookiecutter)
-El proyecto fue inicializado utilizando un andamiaje basado en **Cookiecutter PyPackage**. Esto proveyó una base sólida que incluye:
-- Archivos estándar como `README.md`, `CHANGELOG.md` (con registro de versiones no publicadas), `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` y la licencia `MIT`.
-- Configuración en `pyproject.toml` para herramientas de linting y formateo.
-- Soporte inicial para pruebas automatizadas e integración continua (CI vía GitHub Actions).
+`tpfi_is2.proxy.CorporateDataProxy` valida y audita antes del acceso a datos;
+`tpfi_is2.storage` ofrece gateways en memoria y singletons para las tablas
+`CorporateData` y `CorporateLog` de DynamoDB. Las consultas responden JSON y
+cierran su conexión; las suscripciones mantienen una respuesta abierta con un
+objeto JSON por línea. Véanse el [protocolo HTTP](protocolo_http.md), las
+[instrucciones de uso](usage.md) y la [referencia de API](api.md).
 
-### Dependencias (`REQUERIMENTS.TXT`)
-Se generó el archivo de dependencias (`REQUERIMENTS.TXT`) conteniendo las librerías necesarias para cumplir con los requerimientos técnicos y no funcionales indicados en la consigna:
-- `boto3>=1.34.0`: Para la comunicación con los servicios de AWS (DynamoDB).
-- Herramientas de control de calidad estático: `ruff>=0.3.0`, `black>=24.0.0` (formateo PEP8), `mypy>=1.9.0`, `pyright>=1.1.350` (tipado estático).
-- Seguridad: `bandit>=1.7.8` para análisis estático de vulnerabilidades.
-- Testing: `pytest>=8.0.0` y `pytest-cov>=4.1.0` para asegurar la cobertura de código.
-- Documentación: `pdoc>=14.0.0`.
+## Diagramas del diseño
 
-## 2. Configuración y Conexión con AWS
+Los dos diagramas provistos se consultan en la página de
+[diagramas UML](diagramas_uml.md): [actividad del Proxy](img/diagrama_actividad_proxy.png)
+y [estados del Observer](img/diagrama_estado_observer.png).
 
-### Instalación de AWS CLI y Boto3
-Al tratarse de un entorno Linux (Fedora), la herramienta de línea de comandos de AWS (`aws-cli/2.37.6`) fue instalada descargando y descomprimiendo el paquete oficial para Linux (se evidencia la presencia de los archivos `awscliv2.zip` y el directorio `aws` en el repositorio). Posteriormente, el SDK para Python (`boto3`) se instaló dentro del entorno virtual.
+## Evidencia local
 
-### Configuración de Credenciales
-Las credenciales de acceso (Access Key ID y Secret Access Key) fueron configuradas utilizando el comando `aws configure`, apuntando a la región por defecto (`us-east-1` o `us-west-2` según el archivo de credenciales provisto).
+En el entorno local Python 3.10, la suite final de esta entrega documental
+terminó con **71 pruebas aprobadas en 44,87 s** y cobertura con ramas del
+**89,64 %** (umbral configurado: 85 %). La prueba se ejecutó con
+el gateway en memoria; no prueba la disponibilidad ni los permisos de AWS.
+Los controles Ruff, Black, PEP257, MyPy, PyRight y Bandit pasaron.
+Se generaron 12 páginas HTML con pdoc. Zensical 0.0.67 construyó el sitio
+sin errores en 0,98 s; la revisión independiente confirmó que los 13 archivos
+pdoc y los dos diagramas se copiaron sin cambios. Se comprobaron 3.371
+referencias locales del sitio, incluidas 3.155 comprobaciones de fragmentos:
+los enlaces de API, diagramas e informe funcionan. Como observación menor,
+la plantilla generada `404.html` contiene un enlace de salto `#__skip` sin
+destino. La ejecución alojada de GitHub Actions todavía no se verificó.
+Los casos de aceptación cubren operaciones, auditoría, entradas inválidas,
+servidor desconectado y puerto ocupado. GitHub Actions ejecuta controles de
+calidad; el workflow de documentación valida en PR, push a `main` e inicio
+manual. La publicación desde push o inicio manual en `main` requiere habilitación
+explícita; no se publica desde PR.
 
-> **Nota Importante:** Por motivos de seguridad (y siguiendo la advertencia explícita en la consigna), el archivo provisto con credenciales (`IS2_TPFI_credentials.json`) no debe subirse nunca al repositorio público.
+## Evidencia AWS: identidad y estructura
 
-*A continuación, la evidencia de la configuración exitosa validando la conexión mediante el comando `aws dynamodb list-tables` para listar las tablas:*
+Con autorización explícita se verificaron la identidad del perfil `tpfi-is2`
+y la región `us-east-1`, mediante el SDK. `CorporateData` y `CorporateLog`
+están `ACTIVE`; ambas usan una clave de partición `id` de tipo texto (`S`),
+compatible con el código. La comprobación terminó con código 0 y solo usó
+`GetCallerIdentity` y `DescribeTable`: no leyó ni modificó registros.
 
-![Evidencia de configuración AWS](./capturas/aws_config_terminal.jpg)
-*(Nota: Asegúrate de agregar la captura de tu consola en la carpeta `capturas`)*
+## Validación funcional AWS por consola
 
-### Programa de Diagnóstico (`IS2_TPFI_test.py`)
-Se implementó el script de diagnóstico inicial en `src/IS2_TPFI_test.py` para validar la conectividad con DynamoDB de AWS a nivel de código Python.
-- **Funcionalidad:** Recupera el identificador único de CPU (`UUID` a través de la librería `uuid` y `platform`) y genera un ID de sesión.
-- **Conexión AWS:** Instancia el recurso `boto3` para conectarse a DynamoDB.
-- **Validación de Tablas:** Verifica la existencia de las tablas requeridas por la arquitectura: `CorporateData` y `CorporateLog`, imprimiendo por pantalla sus fechas de creación exitosamente.
+Tras una autorización específica posterior, el usuario ejecutó las pruebas
+con el perfil `tpfi-is2`, en `us-east-1`, usando únicamente el registro
+`TPFI-VALIDACION-IS2-MICAELA-01`. El servidor se inició en `127.0.0.1:8080`
+con el modo memoria desactivado. Los siguientes resultados fueron confirmados
+por el usuario durante la guía; **son pruebas manuales, no una suite AWS
+automatizada ni una inspección independiente de sus salidas**.
 
-## 3. Implementación de Componentes del Sistema (Cliente)
+| Comprobación | Resultado confirmado por el usuario |
+| --- | --- |
+| Precondición | El ID no existía antes de crear el registro. |
+| `subscribe` | El observador conectó y recibió confirmación de suscripción. |
+| Primer `set` | El cliente recibió el registro y el observador recibió la notificación. |
+| `get` | Se recuperó el registro con sede y teléfono; los campos no enviados estaban vacíos. |
+| Actualización parcial | El teléfono cambió de `0000000000` a `0000000001`, la sede `TPFI_VALIDACION` se conservó y llegó otra notificación. |
+| `list` | Incluyó el registro actualizado y no generó una notificación adicional. |
+| Auditoría | Se encontraron `subscribe`, al menos dos `set`, `get` y `list`, con `CPUid`, `sessionid` y `timestamp`; `get`/`set` referenciaban el ID de prueba. |
 
-De acuerdo con el diseño de componentes solicitado en la segunda parte del práctico, se ha avanzado en la construcción del cliente principal de la arquitectura:
-
-### SingletonClient (`src/singleton_client.py`)
-Se desarrolló el módulo cliente encargado de realizar requerimientos de información a la base de datos `CorporateData` de manera centralizada. Este cliente permite simular las operaciones que luego irán al Proxy en AWS.
-
-**Características implementadas en el código actual:**
-- **Clase SingletonClient:** Implementa la lógica de conexión mediante sockets TCP (`socket.AF_INET`, `socket.SOCK_STREAM`) apuntando al servidor aplicativo (por defecto a `localhost:8080`).
-- **Generación de metadatos:** Genera el identificador de nodo/CPU y un identificador de sesión único (`SESSION_ID`) para cada transacción para que quede rastreable.
-- **Procesamiento de JSON:** Interpreta el archivo JSON de entrada (con formato `--input`), inyecta los metadatos necesarios y valida que la acción a realizar sea `get`, `set` o `list`.
-- **Comunicación TCP:** Envía la carga útil en formato JSON al servidor configurado y espera la respuesta correspondiente en formato JSON.
-- **Interfaz CLI (Command Line Interface):** Implementada mediante `argparse`, soporta los argumentos requeridos por la consigna (`-i`, `-o` para salida de archivo en lugar de stdout, `-v` para logging detallado/debug, y opciones de puerto/servidor).
-
-## 4. Estado Actual y Próximos Pasos
-
-El repositorio actualmente cuenta con la infraestructura base, el cliente implementado y las pruebas de conexión. 
-
-**Resumen de lo completado:**
-1. ✅ Inicialización con Cookiecutter y estructura base.
-2. ✅ Dependencias configuradas (`REQUERIMENTS.TXT`).
-3. ✅ CLI AWS configurado y validado en la terminal del entorno virtual `(.venv)`.
-4. ✅ Programa de conexión de prueba funcionando (`IS2_TPFI_test.py`).
-5. ✅ Desarrollo de `SingletonClient` completado en `src/singleton_client.py`.
-
-**Pendientes de Implementación para cumplir la consigna completa:**
-- **Servidor Proxy/Singleton/Observer (`singleton_proxy_observer.py`):** Es el servidor central que levantará en el puerto TCP 8080. Estará encargado de procesar peticiones, gestionar la conexión Singleton a la base de datos de AWS y generar la bitácora auditable en `CorporateLog`.
-- **Observer Client (`observer_client.py`):** El cliente que se suscribirá a las notificaciones y dejará el puerto abierto esperando actualizaciones constantes del servidor cada vez que alguien modifique los datos (`set`).
-- **Diagramas:** Construcción de Diagramas UML de Actividad y de Estado.
-- **Flujos CI/CD:** Habilitar GitHub Actions para control estricto (Ruff, Mypy, Bandit).
-
-## Actualización del protocolo de comunicación
-
-Los componentes aplicativos actuales usan HTTP POST sobre TCP para cumplir la
-mención explícita de POST en la consigna. La acción `subscribe` mantiene una
-respuesta HTTP abierta de tipo NDJSON, con confirmación inicial y una línea JSON
-por actualización. El observador vuelve a suscribirse tras una desconexión.
-El contrato, las limitaciones y los ejemplos se documentan en
-[Protocolo HTTP](protocolo_http.md). Esta sección reemplaza cualquier descripción
-anterior del transporte como JSON directo por socket.
+Un primer intento de `get` por CLI falló con `Could not connect to server`.
+El intento diagnóstico posterior mediante `SingletonClient.send` devolvió el
+registro; no se determinó la causa inicial ni se modificó código para corregirla.
+No se conservaron capturas ni salidas funcionales completas. El registro y la
+auditoría permanecen en AWS: no se autorizó ni ejecutó su eliminación.
+Los casos negativos y la reconexión están cubiertos por la suite local; no se
+repitieron contra AWS en esta demostración. Véase la
+[validación AWS controlada](validacion_aws.md). La ejecución alojada de GitHub
+Actions sigue sin comprobarse.

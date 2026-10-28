@@ -31,6 +31,9 @@ En el entorno local Python 3.10, la suite final de esta entrega documental
 terminó con **71 pruebas aprobadas en 44,87 s** y cobertura con ramas del
 **89,64 %** (umbral configurado: 85 %). La prueba se ejecutó con
 el gateway en memoria; no prueba la disponibilidad ni los permisos de AWS.
+Tras corregir el descubrimiento de workflows en la raíz, una nueva ejecución
+local sin credenciales AWS aprobó **76 pruebas en 44,16 s**, con **90,14 %**
+de cobertura; las variables exportadas en las terminales no fueron necesarias.
 Los controles Ruff, Black, PEP257, MyPy, PyRight y Bandit pasaron.
 Se generaron 12 páginas HTML con pdoc. Zensical 0.0.67 construyó el sitio
 sin errores en 0,98 s; la revisión independiente confirmó que los 13 archivos

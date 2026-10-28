@@ -103,8 +103,9 @@ python singletonclient.py -i=input_list.json
 ## 🧪 Pruebas Automatizadas y Calidad de Código
 
 El proyecto cuenta con pruebas automatizadas y controles estáticos. La ejecución
-local (Python 3.10, gateway en memoria) terminó con **71 pruebas aprobadas en
-44,87 s** y cobertura con ramas del **89,64 %**. Esta suite no valida AWS;
+local posterior a la corrección de CI (Python 3.10, sin credenciales AWS)
+terminó con **76 pruebas aprobadas en 44,16 s** y cobertura con ramas del
+**90,14 %**. Esta suite no valida AWS;
 las pruebas manuales en la nube se describen por separado en el informe.
 
 ### 1. Ejecución de Tests con Cobertura ($\ge 85\%$)
@@ -171,8 +172,17 @@ Cookiecutter ajenas a los tres programas del TP y se excluyen del análisis de t
 Black y Ruff verifican también las pruebas; los ejemplos docentes de
 `tests/sources` y `src/IS2_TPFI_test.py` quedan fuera de formato/lint.
 
-GitHub Actions ejecuta estos controles en cada PR y push a `main`. Cualquier
-error bloquea el resultado `All checks pass`, incluida una cobertura inferior al 85 %.
+Los workflows activos de este repositorio están en `../.github/workflows/ci.yml`
+y `../.github/workflows/docs.yml` (no en las plantillas de
+`.github/workflows/` de este proyecto). Validan PR y pushes a `main`,
+`tpfi/docs-automation`, `tpfi/aws-evidence` y `ci/tpfi-actions-root`;
+los comandos se ejecutan desde `TPFI_IS2/` cuando el ref ya contiene esas
+entradas. La primera ejecución remota se comprueba con push a
+`ci/tpfi-actions-root`; el inicio manual requiere registro en la rama por
+defecto. Cualquier error de CI bloquea `All checks pass`, incluida una
+cobertura inferior al 85 %. Las pruebas y
+controles locales descritos arriba no acreditan aún una ejecución alojada;
+la entrega requiere comprobar las ejecuciones de la rama publicada.
 
 ### VERSION y BUILD
 

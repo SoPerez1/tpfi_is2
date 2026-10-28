@@ -6,6 +6,7 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 ## [Unreleased]
 
 ### Cambiado
+- Entradas de CI y documentación en la raíz de este repositorio; usan `TPFI_IS2/` para comandos y artefactos y mantienen las plantillas anidadas sin activarlas. La ejecución alojada aún debe comprobarse.
 - Informe y checklist actualizados con las pruebas AWS por consola confirmadas por el usuario, separadas de las pruebas automatizadas locales y con sus limitaciones explícitas.
 - Informe y guías actualizados según los tres programas actuales; resultados locales y AWS manuales documentados por separado.
 - Workflow de documentación: validación en PR y generación en `main`; despliegue desde push o inicio manual en `main` solo tras habilitación explícita.

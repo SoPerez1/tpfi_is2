@@ -18,6 +18,8 @@
         <input id="togglestate" type="checkbox" aria-hidden="true" tabindex="-1">
         <div>
 
+            <input type="search" placeholder="Search..." role="searchbox" aria-label="search"
+                   pattern=".+" required>
 
 
 
@@ -87,57 +89,61 @@ tpfi_is2    </h1>
 
     </div>
     <a class="headerlink" href="#SingletonClient"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="SingletonClient-15"><a href="#SingletonClient-15"><span class="linenos">15</span></a><span class="k">class</span><span class="w"> </span><span class="nc">SingletonClient</span><span class="p">:</span>
-</span><span id="SingletonClient-16"><a href="#SingletonClient-16"><span class="linenos">16</span></a><span class="w">    </span><span class="sd">"""Client that sends one JSON request to the server over TCP."""</span>
-</span><span id="SingletonClient-17"><a href="#SingletonClient-17"><span class="linenos">17</span></a>
-</span><span id="SingletonClient-18"><a href="#SingletonClient-18"><span class="linenos">18</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"localhost"</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8080</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="SingletonClient-19"><a href="#SingletonClient-19"><span class="linenos">19</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">host</span>
-</span><span id="SingletonClient-20"><a href="#SingletonClient-20"><span class="linenos">20</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
-</span><span id="SingletonClient-21"><a href="#SingletonClient-21"><span class="linenos">21</span></a>
-</span><span id="SingletonClient-22"><a href="#SingletonClient-22"><span class="linenos">22</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">build_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-</span><span id="SingletonClient-23"><a href="#SingletonClient-23"><span class="linenos">23</span></a><span class="w">        </span><span class="sd">"""Validate input and add UUID (CPU) and session id."""</span>
-</span><span id="SingletonClient-24"><a href="#SingletonClient-24"><span class="linenos">24</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-</span><span id="SingletonClient-25"><a href="#SingletonClient-25"><span class="linenos">25</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Input must be a JSON object"</span><span class="p">)</span>
-</span><span id="SingletonClient-26"><a href="#SingletonClient-26"><span class="linenos">26</span></a>        <span class="n">action</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ACTION"</span><span class="p">)</span>
-</span><span id="SingletonClient-27"><a href="#SingletonClient-27"><span class="linenos">27</span></a>        <span class="k">if</span> <span class="n">action</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"get"</span><span class="p">,</span> <span class="s2">"set"</span><span class="p">,</span> <span class="s2">"list"</span><span class="p">):</span>
-</span><span id="SingletonClient-28"><a href="#SingletonClient-28"><span class="linenos">28</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"ACTION must be 'get', 'set' or 'list'"</span><span class="p">)</span>
-</span><span id="SingletonClient-29"><a href="#SingletonClient-29"><span class="linenos">29</span></a>
-</span><span id="SingletonClient-30"><a href="#SingletonClient-30"><span class="linenos">30</span></a>        <span class="n">payload</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-</span><span id="SingletonClient-31"><a href="#SingletonClient-31"><span class="linenos">31</span></a>        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">"list"</span><span class="p">:</span>
-</span><span id="SingletonClient-32"><a href="#SingletonClient-32"><span class="linenos">32</span></a>            <span class="n">payload</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"ID"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span id="SingletonClient-33"><a href="#SingletonClient-33"><span class="linenos">33</span></a>        <span class="k">elif</span> <span class="ow">not</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ID"</span><span class="p">):</span>
-</span><span id="SingletonClient-34"><a href="#SingletonClient-34"><span class="linenos">34</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ACTION '</span><span class="si">{</span><span class="n">action</span><span class="si">}</span><span class="s2">' requires an ID"</span><span class="p">)</span>
-</span><span id="SingletonClient-35"><a href="#SingletonClient-35"><span class="linenos">35</span></a>        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">"set"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">has_corporate_updates</span><span class="p">(</span><span class="n">payload</span><span class="p">):</span>
-</span><span id="SingletonClient-36"><a href="#SingletonClient-36"><span class="linenos">36</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"ACTION 'set' requires at least one CorporateData field"</span><span class="p">)</span>
-</span><span id="SingletonClient-37"><a href="#SingletonClient-37"><span class="linenos">37</span></a>
-</span><span id="SingletonClient-38"><a href="#SingletonClient-38"><span class="linenos">38</span></a>        <span class="n">payload</span><span class="p">[</span><span class="s2">"UUID"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">getnode</span><span class="p">())</span>
-</span><span id="SingletonClient-39"><a href="#SingletonClient-39"><span class="linenos">39</span></a>        <span class="n">payload</span><span class="p">[</span><span class="s2">"SESSION_ID"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
-</span><span id="SingletonClient-40"><a href="#SingletonClient-40"><span class="linenos">40</span></a>        <span class="k">return</span> <span class="n">payload</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="SingletonClient-18"><a href="#SingletonClient-18"><span class="linenos">18</span></a><span class="k">class</span><span class="w"> </span><span class="nc">SingletonClient</span><span class="p">:</span>
+</span><span id="SingletonClient-19"><a href="#SingletonClient-19"><span class="linenos">19</span></a><span class="w">    </span><span class="sd">"""Client that sends one HTTP POST with a JSON body over TCP."""</span>
+</span><span id="SingletonClient-20"><a href="#SingletonClient-20"><span class="linenos">20</span></a>
+</span><span id="SingletonClient-21"><a href="#SingletonClient-21"><span class="linenos">21</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"localhost"</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8080</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="SingletonClient-22"><a href="#SingletonClient-22"><span class="linenos">22</span></a><span class="w">        </span><span class="sd">"""Initialize the component and its dependencies."""</span>
+</span><span id="SingletonClient-23"><a href="#SingletonClient-23"><span class="linenos">23</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">host</span>
+</span><span id="SingletonClient-24"><a href="#SingletonClient-24"><span class="linenos">24</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
+</span><span id="SingletonClient-25"><a href="#SingletonClient-25"><span class="linenos">25</span></a>
+</span><span id="SingletonClient-26"><a href="#SingletonClient-26"><span class="linenos">26</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">build_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span><span id="SingletonClient-27"><a href="#SingletonClient-27"><span class="linenos">27</span></a><span class="w">        </span><span class="sd">"""Validate input and add UUID (CPU) and session id."""</span>
+</span><span id="SingletonClient-28"><a href="#SingletonClient-28"><span class="linenos">28</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span id="SingletonClient-29"><a href="#SingletonClient-29"><span class="linenos">29</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Input must be a JSON object"</span><span class="p">)</span>
+</span><span id="SingletonClient-30"><a href="#SingletonClient-30"><span class="linenos">30</span></a>        <span class="n">action</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ACTION"</span><span class="p">)</span>
+</span><span id="SingletonClient-31"><a href="#SingletonClient-31"><span class="linenos">31</span></a>        <span class="k">if</span> <span class="n">action</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"get"</span><span class="p">,</span> <span class="s2">"set"</span><span class="p">,</span> <span class="s2">"list"</span><span class="p">):</span>
+</span><span id="SingletonClient-32"><a href="#SingletonClient-32"><span class="linenos">32</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"ACTION must be 'get', 'set' or 'list'"</span><span class="p">)</span>
+</span><span id="SingletonClient-33"><a href="#SingletonClient-33"><span class="linenos">33</span></a>
+</span><span id="SingletonClient-34"><a href="#SingletonClient-34"><span class="linenos">34</span></a>        <span class="n">payload</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</span><span id="SingletonClient-35"><a href="#SingletonClient-35"><span class="linenos">35</span></a>        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">"list"</span><span class="p">:</span>
+</span><span id="SingletonClient-36"><a href="#SingletonClient-36"><span class="linenos">36</span></a>            <span class="n">payload</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"ID"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span id="SingletonClient-37"><a href="#SingletonClient-37"><span class="linenos">37</span></a>        <span class="k">elif</span> <span class="ow">not</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ID"</span><span class="p">):</span>
+</span><span id="SingletonClient-38"><a href="#SingletonClient-38"><span class="linenos">38</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ACTION '</span><span class="si">{</span><span class="n">action</span><span class="si">}</span><span class="s2">' requires an ID"</span><span class="p">)</span>
+</span><span id="SingletonClient-39"><a href="#SingletonClient-39"><span class="linenos">39</span></a>        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">"set"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">has_corporate_updates</span><span class="p">(</span><span class="n">payload</span><span class="p">):</span>
+</span><span id="SingletonClient-40"><a href="#SingletonClient-40"><span class="linenos">40</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"ACTION 'set' requires at least one CorporateData field"</span><span class="p">)</span>
 </span><span id="SingletonClient-41"><a href="#SingletonClient-41"><span class="linenos">41</span></a>
-</span><span id="SingletonClient-42"><a href="#SingletonClient-42"><span class="linenos">42</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-</span><span id="SingletonClient-43"><a href="#SingletonClient-43"><span class="linenos">43</span></a><span class="w">        </span><span class="sd">"""Send the request and return the server JSON response."""</span>
-</span><span id="SingletonClient-44"><a href="#SingletonClient-44"><span class="linenos">44</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Sending to </span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2"> -&gt; </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
-</span><span id="SingletonClient-45"><a href="#SingletonClient-45"><span class="linenos">45</span></a>        <span class="k">try</span><span class="p">:</span>
-</span><span id="SingletonClient-46"><a href="#SingletonClient-46"><span class="linenos">46</span></a>            <span class="k">with</span> <span class="n">socket</span><span class="o">.</span><span class="n">create_connection</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">),</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="k">as</span> <span class="n">sock</span><span class="p">:</span>
-</span><span id="SingletonClient-47"><a href="#SingletonClient-47"><span class="linenos">47</span></a>                <span class="n">sock</span><span class="o">.</span><span class="n">sendall</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">request</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span>
-</span><span id="SingletonClient-48"><a href="#SingletonClient-48"><span class="linenos">48</span></a>                <span class="n">sock</span><span class="o">.</span><span class="n">shutdown</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">SHUT_WR</span><span class="p">)</span>
-</span><span id="SingletonClient-49"><a href="#SingletonClient-49"><span class="linenos">49</span></a>                <span class="n">answer</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">""</span>
-</span><span id="SingletonClient-50"><a href="#SingletonClient-50"><span class="linenos">50</span></a>                <span class="k">while</span> <span class="n">chunk</span> <span class="o">:=</span> <span class="n">sock</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">4096</span><span class="p">):</span>
-</span><span id="SingletonClient-51"><a href="#SingletonClient-51"><span class="linenos">51</span></a>                    <span class="n">answer</span> <span class="o">+=</span> <span class="n">chunk</span>
-</span><span id="SingletonClient-52"><a href="#SingletonClient-52"><span class="linenos">52</span></a>        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-</span><span id="SingletonClient-53"><a href="#SingletonClient-53"><span class="linenos">53</span></a>            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Could not connect to server </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
-</span><span id="SingletonClient-54"><a href="#SingletonClient-54"><span class="linenos">54</span></a>
-</span><span id="SingletonClient-55"><a href="#SingletonClient-55"><span class="linenos">55</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Received &lt;- </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">answer</span><span class="p">)</span>
-</span><span id="SingletonClient-56"><a href="#SingletonClient-56"><span class="linenos">56</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">answer</span><span class="p">:</span>
-</span><span id="SingletonClient-57"><a href="#SingletonClient-57"><span class="linenos">57</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Empty response from server"</span><span class="p">)</span>
-</span><span id="SingletonClient-58"><a href="#SingletonClient-58"><span class="linenos">58</span></a>        <span class="k">try</span><span class="p">:</span>
-</span><span id="SingletonClient-59"><a href="#SingletonClient-59"><span class="linenos">59</span></a>            <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">answer</span><span class="p">)</span>
-</span><span id="SingletonClient-60"><a href="#SingletonClient-60"><span class="linenos">60</span></a>        <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-</span><span id="SingletonClient-61"><a href="#SingletonClient-61"><span class="linenos">61</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Invalid JSON response from server"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+</span><span id="SingletonClient-42"><a href="#SingletonClient-42"><span class="linenos">42</span></a>        <span class="n">payload</span><span class="p">[</span><span class="s2">"UUID"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">getnode</span><span class="p">())</span>
+</span><span id="SingletonClient-43"><a href="#SingletonClient-43"><span class="linenos">43</span></a>        <span class="n">payload</span><span class="p">[</span><span class="s2">"SESSION_ID"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+</span><span id="SingletonClient-44"><a href="#SingletonClient-44"><span class="linenos">44</span></a>        <span class="k">return</span> <span class="n">payload</span>
+</span><span id="SingletonClient-45"><a href="#SingletonClient-45"><span class="linenos">45</span></a>
+</span><span id="SingletonClient-46"><a href="#SingletonClient-46"><span class="linenos">46</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+</span><span id="SingletonClient-47"><a href="#SingletonClient-47"><span class="linenos">47</span></a><span class="w">        </span><span class="sd">"""Send the request and return the server JSON response."""</span>
+</span><span id="SingletonClient-48"><a href="#SingletonClient-48"><span class="linenos">48</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Sending to </span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2"> -&gt; </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+</span><span id="SingletonClient-49"><a href="#SingletonClient-49"><span class="linenos">49</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="SingletonClient-50"><a href="#SingletonClient-50"><span class="linenos">50</span></a>            <span class="k">with</span> <span class="n">socket</span><span class="o">.</span><span class="n">create_connection</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">),</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="k">as</span> <span class="n">sock</span><span class="p">:</span>
+</span><span id="SingletonClient-51"><a href="#SingletonClient-51"><span class="linenos">51</span></a>                <span class="n">send_post</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
+</span><span id="SingletonClient-52"><a href="#SingletonClient-52"><span class="linenos">52</span></a>                <span class="k">try</span><span class="p">:</span>
+</span><span id="SingletonClient-53"><a href="#SingletonClient-53"><span class="linenos">53</span></a>                    <span class="k">with</span> <span class="n">open_response</span><span class="p">(</span><span class="n">sock</span><span class="p">)</span> <span class="k">as</span> <span class="n">response</span><span class="p">:</span>
+</span><span id="SingletonClient-54"><a href="#SingletonClient-54"><span class="linenos">54</span></a>                        <span class="n">answer</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span><span id="SingletonClient-55"><a href="#SingletonClient-55"><span class="linenos">55</span></a>                <span class="k">except</span> <span class="n">RemoteDisconnected</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span id="SingletonClient-56"><a href="#SingletonClient-56"><span class="linenos">56</span></a>                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Empty response from server"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+</span><span id="SingletonClient-57"><a href="#SingletonClient-57"><span class="linenos">57</span></a>                <span class="k">except</span> <span class="n">HTTPException</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span id="SingletonClient-58"><a href="#SingletonClient-58"><span class="linenos">58</span></a>                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Invalid JSON/HTTP response from server"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+</span><span id="SingletonClient-59"><a href="#SingletonClient-59"><span class="linenos">59</span></a>        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span id="SingletonClient-60"><a href="#SingletonClient-60"><span class="linenos">60</span></a>            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Could not connect to server </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+</span><span id="SingletonClient-61"><a href="#SingletonClient-61"><span class="linenos">61</span></a>
+</span><span id="SingletonClient-62"><a href="#SingletonClient-62"><span class="linenos">62</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Received &lt;- </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">answer</span><span class="p">)</span>
+</span><span id="SingletonClient-63"><a href="#SingletonClient-63"><span class="linenos">63</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">answer</span><span class="p">:</span>
+</span><span id="SingletonClient-64"><a href="#SingletonClient-64"><span class="linenos">64</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Empty response from server"</span><span class="p">)</span>
+</span><span id="SingletonClient-65"><a href="#SingletonClient-65"><span class="linenos">65</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="SingletonClient-66"><a href="#SingletonClient-66"><span class="linenos">66</span></a>            <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">answer</span><span class="p">)</span>
+</span><span id="SingletonClient-67"><a href="#SingletonClient-67"><span class="linenos">67</span></a>        <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span id="SingletonClient-68"><a href="#SingletonClient-68"><span class="linenos">68</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Invalid JSON response from server"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 </span></pre></div>
 
 
-            <div class="docstring"><p>Client that sends one JSON request to the server over TCP.</p>
+            <div class="docstring"><p>Client that sends one HTTP POST with a JSON body over TCP.</p>
 </div>
 
 
@@ -151,13 +157,16 @@ tpfi_is2    </h1>
 
     </div>
     <a class="headerlink" href="#SingletonClient.__init__"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="SingletonClient.__init__-18"><a href="#SingletonClient.__init__-18"><span class="linenos">18</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"localhost"</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8080</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="SingletonClient.__init__-19"><a href="#SingletonClient.__init__-19"><span class="linenos">19</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">host</span>
-</span><span id="SingletonClient.__init__-20"><a href="#SingletonClient.__init__-20"><span class="linenos">20</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="SingletonClient.__init__-21"><a href="#SingletonClient.__init__-21"><span class="linenos">21</span></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"localhost"</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8080</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="SingletonClient.__init__-22"><a href="#SingletonClient.__init__-22"><span class="linenos">22</span></a><span class="w">        </span><span class="sd">"""Initialize the component and its dependencies."""</span>
+</span><span id="SingletonClient.__init__-23"><a href="#SingletonClient.__init__-23"><span class="linenos">23</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">host</span>
+</span><span id="SingletonClient.__init__-24"><a href="#SingletonClient.__init__-24"><span class="linenos">24</span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>Initialize the component and its dependencies.</p>
+</div>
+
 
                             </div>
                             <div id="SingletonClient.host" class="classattr">
@@ -193,25 +202,25 @@ tpfi_is2    </h1>
 
     </div>
     <a class="headerlink" href="#SingletonClient.build_request"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="SingletonClient.build_request-22"><a href="#SingletonClient.build_request-22"><span class="linenos">22</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">build_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-</span><span id="SingletonClient.build_request-23"><a href="#SingletonClient.build_request-23"><span class="linenos">23</span></a><span class="w">        </span><span class="sd">"""Validate input and add UUID (CPU) and session id."""</span>
-</span><span id="SingletonClient.build_request-24"><a href="#SingletonClient.build_request-24"><span class="linenos">24</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-</span><span id="SingletonClient.build_request-25"><a href="#SingletonClient.build_request-25"><span class="linenos">25</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Input must be a JSON object"</span><span class="p">)</span>
-</span><span id="SingletonClient.build_request-26"><a href="#SingletonClient.build_request-26"><span class="linenos">26</span></a>        <span class="n">action</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ACTION"</span><span class="p">)</span>
-</span><span id="SingletonClient.build_request-27"><a href="#SingletonClient.build_request-27"><span class="linenos">27</span></a>        <span class="k">if</span> <span class="n">action</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"get"</span><span class="p">,</span> <span class="s2">"set"</span><span class="p">,</span> <span class="s2">"list"</span><span class="p">):</span>
-</span><span id="SingletonClient.build_request-28"><a href="#SingletonClient.build_request-28"><span class="linenos">28</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"ACTION must be 'get', 'set' or 'list'"</span><span class="p">)</span>
-</span><span id="SingletonClient.build_request-29"><a href="#SingletonClient.build_request-29"><span class="linenos">29</span></a>
-</span><span id="SingletonClient.build_request-30"><a href="#SingletonClient.build_request-30"><span class="linenos">30</span></a>        <span class="n">payload</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-</span><span id="SingletonClient.build_request-31"><a href="#SingletonClient.build_request-31"><span class="linenos">31</span></a>        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">"list"</span><span class="p">:</span>
-</span><span id="SingletonClient.build_request-32"><a href="#SingletonClient.build_request-32"><span class="linenos">32</span></a>            <span class="n">payload</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"ID"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span id="SingletonClient.build_request-33"><a href="#SingletonClient.build_request-33"><span class="linenos">33</span></a>        <span class="k">elif</span> <span class="ow">not</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ID"</span><span class="p">):</span>
-</span><span id="SingletonClient.build_request-34"><a href="#SingletonClient.build_request-34"><span class="linenos">34</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ACTION '</span><span class="si">{</span><span class="n">action</span><span class="si">}</span><span class="s2">' requires an ID"</span><span class="p">)</span>
-</span><span id="SingletonClient.build_request-35"><a href="#SingletonClient.build_request-35"><span class="linenos">35</span></a>        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">"set"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">has_corporate_updates</span><span class="p">(</span><span class="n">payload</span><span class="p">):</span>
-</span><span id="SingletonClient.build_request-36"><a href="#SingletonClient.build_request-36"><span class="linenos">36</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"ACTION 'set' requires at least one CorporateData field"</span><span class="p">)</span>
-</span><span id="SingletonClient.build_request-37"><a href="#SingletonClient.build_request-37"><span class="linenos">37</span></a>
-</span><span id="SingletonClient.build_request-38"><a href="#SingletonClient.build_request-38"><span class="linenos">38</span></a>        <span class="n">payload</span><span class="p">[</span><span class="s2">"UUID"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">getnode</span><span class="p">())</span>
-</span><span id="SingletonClient.build_request-39"><a href="#SingletonClient.build_request-39"><span class="linenos">39</span></a>        <span class="n">payload</span><span class="p">[</span><span class="s2">"SESSION_ID"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
-</span><span id="SingletonClient.build_request-40"><a href="#SingletonClient.build_request-40"><span class="linenos">40</span></a>        <span class="k">return</span> <span class="n">payload</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="SingletonClient.build_request-26"><a href="#SingletonClient.build_request-26"><span class="linenos">26</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">build_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span><span id="SingletonClient.build_request-27"><a href="#SingletonClient.build_request-27"><span class="linenos">27</span></a><span class="w">        </span><span class="sd">"""Validate input and add UUID (CPU) and session id."""</span>
+</span><span id="SingletonClient.build_request-28"><a href="#SingletonClient.build_request-28"><span class="linenos">28</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span id="SingletonClient.build_request-29"><a href="#SingletonClient.build_request-29"><span class="linenos">29</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Input must be a JSON object"</span><span class="p">)</span>
+</span><span id="SingletonClient.build_request-30"><a href="#SingletonClient.build_request-30"><span class="linenos">30</span></a>        <span class="n">action</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ACTION"</span><span class="p">)</span>
+</span><span id="SingletonClient.build_request-31"><a href="#SingletonClient.build_request-31"><span class="linenos">31</span></a>        <span class="k">if</span> <span class="n">action</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"get"</span><span class="p">,</span> <span class="s2">"set"</span><span class="p">,</span> <span class="s2">"list"</span><span class="p">):</span>
+</span><span id="SingletonClient.build_request-32"><a href="#SingletonClient.build_request-32"><span class="linenos">32</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"ACTION must be 'get', 'set' or 'list'"</span><span class="p">)</span>
+</span><span id="SingletonClient.build_request-33"><a href="#SingletonClient.build_request-33"><span class="linenos">33</span></a>
+</span><span id="SingletonClient.build_request-34"><a href="#SingletonClient.build_request-34"><span class="linenos">34</span></a>        <span class="n">payload</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</span><span id="SingletonClient.build_request-35"><a href="#SingletonClient.build_request-35"><span class="linenos">35</span></a>        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">"list"</span><span class="p">:</span>
+</span><span id="SingletonClient.build_request-36"><a href="#SingletonClient.build_request-36"><span class="linenos">36</span></a>            <span class="n">payload</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"ID"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span id="SingletonClient.build_request-37"><a href="#SingletonClient.build_request-37"><span class="linenos">37</span></a>        <span class="k">elif</span> <span class="ow">not</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ID"</span><span class="p">):</span>
+</span><span id="SingletonClient.build_request-38"><a href="#SingletonClient.build_request-38"><span class="linenos">38</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ACTION '</span><span class="si">{</span><span class="n">action</span><span class="si">}</span><span class="s2">' requires an ID"</span><span class="p">)</span>
+</span><span id="SingletonClient.build_request-39"><a href="#SingletonClient.build_request-39"><span class="linenos">39</span></a>        <span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="s2">"set"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">has_corporate_updates</span><span class="p">(</span><span class="n">payload</span><span class="p">):</span>
+</span><span id="SingletonClient.build_request-40"><a href="#SingletonClient.build_request-40"><span class="linenos">40</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"ACTION 'set' requires at least one CorporateData field"</span><span class="p">)</span>
+</span><span id="SingletonClient.build_request-41"><a href="#SingletonClient.build_request-41"><span class="linenos">41</span></a>
+</span><span id="SingletonClient.build_request-42"><a href="#SingletonClient.build_request-42"><span class="linenos">42</span></a>        <span class="n">payload</span><span class="p">[</span><span class="s2">"UUID"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">getnode</span><span class="p">())</span>
+</span><span id="SingletonClient.build_request-43"><a href="#SingletonClient.build_request-43"><span class="linenos">43</span></a>        <span class="n">payload</span><span class="p">[</span><span class="s2">"SESSION_ID"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+</span><span id="SingletonClient.build_request-44"><a href="#SingletonClient.build_request-44"><span class="linenos">44</span></a>        <span class="k">return</span> <span class="n">payload</span>
 </span></pre></div>
 
 
@@ -231,26 +240,29 @@ tpfi_is2    </h1>
 
     </div>
     <a class="headerlink" href="#SingletonClient.send"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="SingletonClient.send-42"><a href="#SingletonClient.send-42"><span class="linenos">42</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-</span><span id="SingletonClient.send-43"><a href="#SingletonClient.send-43"><span class="linenos">43</span></a><span class="w">        </span><span class="sd">"""Send the request and return the server JSON response."""</span>
-</span><span id="SingletonClient.send-44"><a href="#SingletonClient.send-44"><span class="linenos">44</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Sending to </span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2"> -&gt; </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
-</span><span id="SingletonClient.send-45"><a href="#SingletonClient.send-45"><span class="linenos">45</span></a>        <span class="k">try</span><span class="p">:</span>
-</span><span id="SingletonClient.send-46"><a href="#SingletonClient.send-46"><span class="linenos">46</span></a>            <span class="k">with</span> <span class="n">socket</span><span class="o">.</span><span class="n">create_connection</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">),</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="k">as</span> <span class="n">sock</span><span class="p">:</span>
-</span><span id="SingletonClient.send-47"><a href="#SingletonClient.send-47"><span class="linenos">47</span></a>                <span class="n">sock</span><span class="o">.</span><span class="n">sendall</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">request</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span>
-</span><span id="SingletonClient.send-48"><a href="#SingletonClient.send-48"><span class="linenos">48</span></a>                <span class="n">sock</span><span class="o">.</span><span class="n">shutdown</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">SHUT_WR</span><span class="p">)</span>
-</span><span id="SingletonClient.send-49"><a href="#SingletonClient.send-49"><span class="linenos">49</span></a>                <span class="n">answer</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">""</span>
-</span><span id="SingletonClient.send-50"><a href="#SingletonClient.send-50"><span class="linenos">50</span></a>                <span class="k">while</span> <span class="n">chunk</span> <span class="o">:=</span> <span class="n">sock</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">4096</span><span class="p">):</span>
-</span><span id="SingletonClient.send-51"><a href="#SingletonClient.send-51"><span class="linenos">51</span></a>                    <span class="n">answer</span> <span class="o">+=</span> <span class="n">chunk</span>
-</span><span id="SingletonClient.send-52"><a href="#SingletonClient.send-52"><span class="linenos">52</span></a>        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-</span><span id="SingletonClient.send-53"><a href="#SingletonClient.send-53"><span class="linenos">53</span></a>            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Could not connect to server </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
-</span><span id="SingletonClient.send-54"><a href="#SingletonClient.send-54"><span class="linenos">54</span></a>
-</span><span id="SingletonClient.send-55"><a href="#SingletonClient.send-55"><span class="linenos">55</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Received &lt;- </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">answer</span><span class="p">)</span>
-</span><span id="SingletonClient.send-56"><a href="#SingletonClient.send-56"><span class="linenos">56</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">answer</span><span class="p">:</span>
-</span><span id="SingletonClient.send-57"><a href="#SingletonClient.send-57"><span class="linenos">57</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Empty response from server"</span><span class="p">)</span>
-</span><span id="SingletonClient.send-58"><a href="#SingletonClient.send-58"><span class="linenos">58</span></a>        <span class="k">try</span><span class="p">:</span>
-</span><span id="SingletonClient.send-59"><a href="#SingletonClient.send-59"><span class="linenos">59</span></a>            <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">answer</span><span class="p">)</span>
-</span><span id="SingletonClient.send-60"><a href="#SingletonClient.send-60"><span class="linenos">60</span></a>        <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-</span><span id="SingletonClient.send-61"><a href="#SingletonClient.send-61"><span class="linenos">61</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Invalid JSON response from server"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="SingletonClient.send-46"><a href="#SingletonClient.send-46"><span class="linenos">46</span></a>    <span class="k">def</span><span class="w"> </span><span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+</span><span id="SingletonClient.send-47"><a href="#SingletonClient.send-47"><span class="linenos">47</span></a><span class="w">        </span><span class="sd">"""Send the request and return the server JSON response."""</span>
+</span><span id="SingletonClient.send-48"><a href="#SingletonClient.send-48"><span class="linenos">48</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Sending to </span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2"> -&gt; </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
+</span><span id="SingletonClient.send-49"><a href="#SingletonClient.send-49"><span class="linenos">49</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="SingletonClient.send-50"><a href="#SingletonClient.send-50"><span class="linenos">50</span></a>            <span class="k">with</span> <span class="n">socket</span><span class="o">.</span><span class="n">create_connection</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">),</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span> <span class="k">as</span> <span class="n">sock</span><span class="p">:</span>
+</span><span id="SingletonClient.send-51"><a href="#SingletonClient.send-51"><span class="linenos">51</span></a>                <span class="n">send_post</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
+</span><span id="SingletonClient.send-52"><a href="#SingletonClient.send-52"><span class="linenos">52</span></a>                <span class="k">try</span><span class="p">:</span>
+</span><span id="SingletonClient.send-53"><a href="#SingletonClient.send-53"><span class="linenos">53</span></a>                    <span class="k">with</span> <span class="n">open_response</span><span class="p">(</span><span class="n">sock</span><span class="p">)</span> <span class="k">as</span> <span class="n">response</span><span class="p">:</span>
+</span><span id="SingletonClient.send-54"><a href="#SingletonClient.send-54"><span class="linenos">54</span></a>                        <span class="n">answer</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span><span id="SingletonClient.send-55"><a href="#SingletonClient.send-55"><span class="linenos">55</span></a>                <span class="k">except</span> <span class="n">RemoteDisconnected</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span id="SingletonClient.send-56"><a href="#SingletonClient.send-56"><span class="linenos">56</span></a>                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Empty response from server"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+</span><span id="SingletonClient.send-57"><a href="#SingletonClient.send-57"><span class="linenos">57</span></a>                <span class="k">except</span> <span class="n">HTTPException</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span id="SingletonClient.send-58"><a href="#SingletonClient.send-58"><span class="linenos">58</span></a>                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Invalid JSON/HTTP response from server"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+</span><span id="SingletonClient.send-59"><a href="#SingletonClient.send-59"><span class="linenos">59</span></a>        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span id="SingletonClient.send-60"><a href="#SingletonClient.send-60"><span class="linenos">60</span></a>            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Could not connect to server </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+</span><span id="SingletonClient.send-61"><a href="#SingletonClient.send-61"><span class="linenos">61</span></a>
+</span><span id="SingletonClient.send-62"><a href="#SingletonClient.send-62"><span class="linenos">62</span></a>        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Received &lt;- </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">answer</span><span class="p">)</span>
+</span><span id="SingletonClient.send-63"><a href="#SingletonClient.send-63"><span class="linenos">63</span></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">answer</span><span class="p">:</span>
+</span><span id="SingletonClient.send-64"><a href="#SingletonClient.send-64"><span class="linenos">64</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Empty response from server"</span><span class="p">)</span>
+</span><span id="SingletonClient.send-65"><a href="#SingletonClient.send-65"><span class="linenos">65</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="SingletonClient.send-66"><a href="#SingletonClient.send-66"><span class="linenos">66</span></a>            <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">answer</span><span class="p">)</span>
+</span><span id="SingletonClient.send-67"><a href="#SingletonClient.send-67"><span class="linenos">67</span></a>        <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span id="SingletonClient.send-68"><a href="#SingletonClient.send-68"><span class="linenos">68</span></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Invalid JSON response from server"</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 </span></pre></div>
 
 
@@ -261,5 +273,186 @@ tpfi_is2    </h1>
                             </div>
                 </section>
     </main>
-</body>
+<script>
+    function escapeHTML(html) {
+        return document.createElement('div').appendChild(document.createTextNode(html)).parentNode.innerHTML;
+    }
+
+    const originalContent = document.querySelector("main.pdoc");
+    let currentContent = originalContent;
+
+    function setContent(innerHTML) {
+        let elem;
+        if (innerHTML) {
+            elem = document.createElement("main");
+            elem.classList.add("pdoc");
+            elem.innerHTML = innerHTML;
+        } else {
+            elem = originalContent;
+        }
+        if (currentContent !== elem) {
+            currentContent.replaceWith(elem);
+            currentContent = elem;
+        }
+    }
+
+    function getSearchTerm() {
+        return (new URL(window.location)).searchParams.get("search");
+    }
+
+    const searchBox = document.querySelector(".pdoc input[type=search]");
+    searchBox.addEventListener("input", function () {
+        let url = new URL(window.location);
+        if (searchBox.value.trim()) {
+            url.hash = "";
+            url.searchParams.set("search", searchBox.value);
+        } else {
+            url.searchParams.delete("search");
+        }
+        history.replaceState("", "", url.toString());
+        onInput();
+    });
+    window.addEventListener("popstate", onInput);
+
+
+    let search, searchErr;
+
+    async function initialize() {
+        try {
+            search = await new Promise((resolve, reject) => {
+                const script = document.createElement("script");
+                script.type = "text/javascript";
+                script.async = true;
+                script.onload = () => resolve(window.pdocSearch);
+                script.onerror = (e) => reject(e);
+                script.src = "search.js";
+                document.getElementsByTagName("head")[0].appendChild(script);
+            });
+        } catch (e) {
+            console.error("Cannot fetch pdoc search index");
+            searchErr = "Cannot fetch search index.";
+        }
+        onInput();
+
+        document.querySelector("nav.pdoc").addEventListener("click", e => {
+            if (e.target.hash) {
+                searchBox.value = "";
+                searchBox.dispatchEvent(new Event("input"));
+            }
+        });
+    }
+
+    function onInput() {
+        setContent((() => {
+            const term = getSearchTerm();
+            if (!term) {
+                return null
+            }
+            if (searchErr) {
+                return `<h3>Error: ${searchErr}</h3>`
+            }
+            if (!search) {
+                return "<h3>Searching...</h3>"
+            }
+
+            window.scrollTo({top: 0, left: 0, behavior: 'auto'});
+
+            const results = search(term);
+
+            let html;
+            if (results.length === 0) {
+                html = `No search results for '${escapeHTML(term)}'.`
+            } else {
+                html = `<h4>${results.length} search result${results.length > 1 ? "s" : ""} for '${escapeHTML(term)}'.</h4>`;
+            }
+            for (let result of results.slice(0, 10)) {
+                let doc = result.doc;
+                let url = `${doc.modulename.replaceAll(".", "/")}.html`;
+                if (doc.qualname) {
+                    url += `#${doc.qualname}`;
+                }
+
+                let heading;
+                switch (result.doc.kind) {
+                    case "function":
+                        if (doc.fullname.endsWith(".__init__")) {
+                            heading = `<span class="name">${doc.fullname.replace(/\.__init__$/, "")}</span>${doc.signature}`;
+                        } else {
+                            heading = `<span class="def">${doc.funcdef}</span> <span class="name">${doc.fullname}</span>${doc.signature}`;
+                        }
+                        break;
+                    case "class":
+                        heading = `<span class="def">class</span> <span class="name">${doc.fullname}</span>`;
+                        if (doc.bases)
+                            heading += `<wbr>(<span class="base">${doc.bases}</span>)`;
+                        heading += `:`;
+                        break;
+                    case "variable":
+                        heading = `<span class="name">${doc.fullname}</span>`;
+                        if (doc.annotation)
+                            heading += `<span class="annotation">${doc.annotation}</span>`;
+                        if (doc.default_value)
+                            heading += `<span class="default_value"> = ${doc.default_value}</span>`;
+                        break;
+                    default:
+                        heading = `<span class="name">${doc.fullname}</span>`;
+                        break;
+                }
+                html += `
+                        <section class="search-result">
+                        <a href="${url}" class="attr ${doc.kind}">${heading}</a>
+                        <div class="docstring">${doc.doc}</div>
+                        </section>
+                    `;
+
+            }
+            return html;
+        })());
+    }
+
+    if (getSearchTerm()) {
+        initialize();
+        searchBox.value = getSearchTerm();
+        onInput();
+    } else {
+        searchBox.addEventListener("focus", initialize, {once: true});
+    }
+
+    searchBox.addEventListener("keydown", e => {
+        if (["ArrowDown", "ArrowUp", "Enter"].includes(e.key)) {
+            let focused = currentContent.querySelector(".search-result.focused");
+            if (!focused) {
+                currentContent.querySelector(".search-result").classList.add("focused");
+            } else if (
+                e.key === "ArrowDown"
+                && focused.nextElementSibling
+                && focused.nextElementSibling.classList.contains("search-result")
+            ) {
+                focused.classList.remove("focused");
+                focused.nextElementSibling.classList.add("focused");
+                focused.nextElementSibling.scrollIntoView({
+                    behavior: "smooth",
+                    block: "nearest",
+                    inline: "nearest"
+                });
+            } else if (
+                e.key === "ArrowUp"
+                && focused.previousElementSibling
+                && focused.previousElementSibling.classList.contains("search-result")
+            ) {
+                focused.classList.remove("focused");
+                focused.previousElementSibling.classList.add("focused");
+                focused.previousElementSibling.scrollIntoView({
+                    behavior: "smooth",
+                    block: "nearest",
+                    inline: "nearest"
+                });
+            } else if (
+                e.key === "Enter"
+            ) {
+                focused.querySelector("a").click();
+            }
+        }
+    });
+</script></body>
 </html>

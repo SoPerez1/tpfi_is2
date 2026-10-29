@@ -40,6 +40,7 @@ lint = [
 test = [
     "coverage",
     "pytest",
+    "PyYAML>=6.0",
 ]
 typecheck = [
     "ty",
@@ -52,6 +53,7 @@ security = [
 docs = [
     "zensical",
     "mkdocstrings-python",
+    "pdoc>=14.0.0",
 ]
 
 [project.urls]

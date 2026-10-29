@@ -102,7 +102,11 @@ python singletonclient.py -i=input_list.json
 
 ## 🧪 Pruebas Automatizadas y Calidad de Código
 
-El proyecto cuenta con un conjunto exhaustivo de pruebas automatizadas y controles estáticos:
+El proyecto cuenta con pruebas automatizadas y controles estáticos. La ejecución
+local posterior a la corrección de CI (Python 3.10, sin credenciales AWS)
+terminó con **76 pruebas aprobadas en 44,16 s** y cobertura con ramas del
+**90,14 %**. Esta suite no valida AWS;
+las pruebas manuales en la nube se describen por separado en el informe.
 
 ### 1. Ejecución de Tests con Cobertura ($\ge 85\%$)
 ```bash
@@ -129,8 +133,11 @@ bandit -r src/
 ---
 
 ## 📚 Documentación Adicional
-- [`docs/diagramas_uml.md`](docs/diagramas_uml.md): diagramas UML de actividad (Proxy) y estados (Observer).
-- [`docs/informe_tpfi.md`](docs/informe_tpfi.md): Informe de implementación detallado del TPFI.
+- [`docs/diagramas_uml.md`](docs/diagramas_uml.md): diagramas UML de [actividad del Proxy](docs/img/diagrama_actividad_proxy.png) y [estados del Observer](docs/img/diagrama_estado_observer.png).
+- [`docs/informe_tpfi.md`](docs/informe_tpfi.md): componentes actuales, resultados locales y validación AWS manual.
+- [`docs/usage.md`](docs/usage.md): uso de los tres programas ejecutables.
+- [`docs/api.md`](docs/api.md): API aplicativa generada con pdoc y publicada junto con el sitio Zensical.
+- [`docs/validacion_aws.md`](docs/validacion_aws.md): alcance, resultados manuales y limitaciones de la prueba AWS; nuevas escrituras requieren autorización.
 - [`CHANGELOG.md`](CHANGELOG.md): Historial de versiones y cambios del sistema.
 - [`CONTEXT.md`](CONTEXT.md): Bitácora de prompts utilizados durante el desarrollo asistido con IA.
 
@@ -165,8 +172,17 @@ Cookiecutter ajenas a los tres programas del TP y se excluyen del análisis de t
 Black y Ruff verifican también las pruebas; los ejemplos docentes de
 `tests/sources` y `src/IS2_TPFI_test.py` quedan fuera de formato/lint.
 
-GitHub Actions ejecuta estos controles en cada PR y push a `main`. Cualquier
-error bloquea el resultado `All checks pass`, incluida una cobertura inferior al 85 %.
+Los workflows activos de este repositorio están en `../.github/workflows/ci.yml`
+y `../.github/workflows/docs.yml` (no en las plantillas de
+`.github/workflows/` de este proyecto). Validan PR y pushes a `main`,
+`tpfi/docs-automation`, `tpfi/aws-evidence` y `ci/tpfi-actions-root`;
+los comandos se ejecutan desde `TPFI_IS2/` cuando el ref ya contiene esas
+entradas. La primera ejecución remota se comprueba con push a
+`ci/tpfi-actions-root`; el inicio manual requiere registro en la rama por
+defecto. Cualquier error de CI bloquea `All checks pass`, incluida una
+cobertura inferior al 85 %. Las pruebas y
+controles locales descritos arriba no acreditan aún una ejecución alojada;
+la entrega requiere comprobar las ejecuciones de la rama publicada.
 
 ### VERSION y BUILD
 

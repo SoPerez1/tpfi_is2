@@ -55,3 +55,7 @@ site/
 IS2_TPFI_credentials.json 
 .venv/
 TPFI_IS2/tests/sources/
+IS2_TPFI_credentials.json
+IS2_TPFI_credentials.json
+.venv/
+__pycache__/

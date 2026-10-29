@@ -1,12 +1,18 @@
-# TPFI_IS2
+# TPFI IS2
 
-Implementacion del Trabajo Practico Final Integrador de Ingenieria de Software II,
-con los patrones Proxy, Singleton y Observer.
+Servidor y clientes Python que aplican Proxy, Singleton y Observer para
+operaciones corporativas con auditoría. El backend local en memoria permite
+probar el flujo sin credenciales AWS.
 
-## Documentacion
+## Empezar
 
-- [Instalacion](installation.md)
-- [Uso](usage.md)
-- [Diagramas UML](diagramas_uml.md): diagramas de actividad del Proxy y de estados del Observer
-- [Informe de implementacion](informe_tpfi.md)
-- [Referencia de la API](api.md)
+1. [Instalación](installation.md) — preparar el entorno.
+2. [Uso local](usage.md) — iniciar servidor, observador y cliente.
+3. [Protocolo HTTP](protocolo_http.md) — solicitudes JSON y flujo NDJSON.
+
+## Diseño y evidencia
+
+- [Diagramas UML](diagramas_uml.md) — actividad del Proxy y estados del Observer.
+- [Informe](informe_tpfi.md) — componentes actuales, resultados locales y pruebas AWS manuales.
+- [Validación AWS](validacion_aws.md) — resultados manuales confirmados y límites del alcance autorizado.
+- [Referencia de API](api.md) — módulos aplicativos generados con pdoc.

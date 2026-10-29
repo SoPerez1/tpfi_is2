@@ -38,8 +38,12 @@ This starts a local server at http://localhost:8000 with live reload. Edit
 files in `docs/` or add docstrings to your code (the API reference page is
 auto-generated). Run `just docs-build` to verify a production build.
 
-Docs deploy automatically on push to `main` after GitHub Pages is enabled. If
-the generator did not enable it, review the visibility implications first:
+In this outer repository, `../.github/workflows/docs.yml` is the active
+workflow; `.github/workflows/` inside this project contains templates only.
+Docs are built on pull requests and the explicitly listed push branches.
+Deployment is restricted to a main push or manual main run with
+`DOCS_DEPLOYMENT_ENABLED=true`. Local builds do not establish hosted Actions
+success. If the generator did not enable it, review the visibility implications first:
 [Pages sites can be public even when their repositories are private](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site),
 and the feature may require a paid GitHub plan for private repositories. Then
 go to Settings > Pages, set the source to **GitHub Actions**, and enable the
@@ -147,9 +151,9 @@ uv run pytest tests/
    This finalizes `CHANGELOG/unreleased.md` as
    `CHANGELOG/<version>.md`, creates a fresh unreleased file, commits and
    pushes that notes commit, then creates an annotated `v*` tag and GitHub
-   Release. The tag push triggers `.github/workflows/publish.yml`, which
-   builds the package, generates SLSA provenance attestations, and publishes
-   to PyPI via trusted publishing.
+   Release. The nested `.github/workflows/publish.yml` is a project template, not an
+   active workflow in this outer repository. This delivery does not activate
+   tag-triggered publishing.
 
 Record release-worthy changes in `CHANGELOG/unreleased.md` as they merge.
 Projects generated before this changelog lifecycle was introduced remain

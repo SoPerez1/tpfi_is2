@@ -1,19 +1,22 @@
 # Diagramas UML
 
-Estas imágenes describen los flujos de diseño; no son capturas de una prueba
-AWS. Para ejecutar los componentes, véanse las [instrucciones de uso](usage.md)
-y el [informe de implementación](informe_tpfi.md).
+Estos diagramas describen los flujos implementados de Proxy y Observer; no
+son capturas de una prueba AWS. Véanse las [instrucciones de uso](usage.md) y
+el [informe de implementación](informe_tpfi.md) para la ejecución y su evidencia.
 
-## Actividad: Proxy
+## Actividad: `get`, `set` y `list` (Proxy)
 
-El Proxy recibe una operación, valida sus campos, audita la solicitud y delega
-el acceso al gateway de datos. Un `set` exitoso se notifica al Observer.
+El servidor recibe y valida la solicitud JSON; el Proxy audita la operación
+antes de delegar el acceso a `CorporateData`. Tras un `set` exitoso, notifica
+a los clientes suscriptos además de responder al solicitante.
 
 ![Diagrama UML de actividad del Proxy](img/diagrama_actividad_proxy.png)
 
-## Estados: Observer
+## Estados: suscripción y notificaciones (Observer)
 
-El cliente observador se conecta, se suscribe, escucha actualizaciones NDJSON
-y vuelve a intentar la suscripción cuando se interrumpe la conexión.
+El observador se suscribe, escucha las notificaciones NDJSON de cambios y
+vuelve a intentar la suscripción cuando se interrumpe la conexión. El diagrama
+representa también las transiciones por notificación, desconexión y fallo de
+envío.
 
 ![Diagrama UML de estados del Observer](img/diagrama_estado_observer.png)

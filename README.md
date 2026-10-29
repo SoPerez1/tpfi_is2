@@ -2,6 +2,9 @@
 
 El aplicativo y las instrucciones de ejecución están en [TPFI_IS2/README.md](TPFI_IS2/README.md).
 
+Para la exposición, consultar [Comandos para mostrar el TP](COMANDOS_DEMO.md)
+(instalación, demo en tres terminales, errores controlados y pruebas).
+
 Los workflows **activos** de este repositorio están en [`.github/workflows/`](.github/workflows/):
 CI y documentación usan `TPFI_IS2/` para los comandos. Los archivos en
 [`TPFI_IS2/.github/workflows/`](TPFI_IS2/.github/workflows/) son plantillas

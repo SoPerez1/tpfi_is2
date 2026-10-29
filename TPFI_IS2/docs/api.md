@@ -23,8 +23,12 @@ no se dispone de `just`/`uv`, con pdoc instalado se puede regenerar el HTML:
 PYTHONPATH=src python -m pdoc tpfi_is2 tpfi_is2.storage tpfi_is2.proxy tpfi_is2.observer tpfi_is2.proxy_server tpfi_is2.singleton_client tpfi_is2.observer_client tpfi_is2.http_transport tpfi_is2.corporate_fields tpfi_is2.json_util tpfi_is2.version -o docs/html
 ```
 
-En CI la validación de documentación se ejecuta en PR, push a `main` e inicio
-manual. La publicación en GitHub Pages se permite únicamente para push a `main`
-o ejecución manual desde `main`, con `DOCS_DEPLOYMENT_ENABLED=true`; nunca desde
-PR. El HTML también puede abrirse localmente desde
+El workflow activo del repositorio está en `../../.github/workflows/docs.yml`;
+el ubicado en `../.github/workflows/docs.yml` es una plantilla anidada. La
+validación genera pdoc y construye Zensical en PR, inicio manual y push a
+`main`, `tpfi/docs-automation`, `tpfi/aws-evidence` o `ci/tpfi-actions-root`.
+La publicación en GitHub Pages se permite únicamente para push a `main` o
+ejecución manual desde `main`, con `DOCS_DEPLOYMENT_ENABLED=true`; nunca desde
+PR ni desde las ramas de entrega. La generación local no acredita la ejecución
+alojada en GitHub Actions. El HTML también puede abrirse localmente desde
 [la portada de pdoc](html/index.html).

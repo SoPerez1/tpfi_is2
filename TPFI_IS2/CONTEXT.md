@@ -60,3 +60,18 @@ Este documento registra los prompts y contextos utilizados en la asistencia de h
 ## 9. HTTP POST y notificaciones persistentes
 - **Prompt:** "hagamos esto", referido a implementar HTTP POST y mantener una respuesta persistente para los observadores, documentando la decisión.
 - **Resultado:** Transporte HTTP compartido, adaptación de clientes y servidor, respuesta NDJSON para suscripciones y pruebas de interoperabilidad, errores, reconexión y Unicode.
+
+## 10. Entrega documental local
+- **Mensajes exactos del usuario:** "podes visualizar el pdf IS2_TPFI?? en donde se plantea todo el trabajo, y necesito saber si viene todo listo, o si faltan cosas"; "perfecto, como puedo seguir para completar con lo que falta?"; aprobación del plan: "okey, hagamos".
+- **Autorización de lectura:** "autorizar" permitió consultar material instalado; no autorizó credenciales, operaciones AWS ni publicaciones.
+- **Resultado local previo a esta edición:** 68 pruebas aprobadas en Python 3.10 y cobertura de ramas 89,64241676942046 % con gateways en memoria. Se actualizó el informe, se enlazaron ambos diagramas UML y se integró pdoc con la generación del sitio Zensical. En ese momento la validación AWS estaba pendiente de elegir y autorizar un ID de prueba.
+
+## 11. Pruebas AWS guiadas por consola
+- **Prompt exacto del usuario:** "quiero hacer las prubas por consola". Autorizó después la prueba controlada sobre un único ID y sus entradas de auditoría.
+- **Resultado:** El usuario confirmó suscripción, creación, consulta, actualización parcial, notificaciones, listado y auditoría sobre `TPFI-VALIDACION-IS2-MICAELA-01`. Son confirmaciones manuales, separadas de las 71 pruebas automatizadas locales y del 89,64 % de cobertura.
+- **Límites:** No se mostraron ni guardaron credenciales; no se eliminaron registros. Un primer `get` por CLI falló y una consulta posterior con el mismo cliente funcionó; la causa inicial no se determinó. No se afirma ejecución de GitHub Actions ni una suite automatizada contra AWS.
+
+## 12. Entrega remota y descubrimiento de workflows
+- **Solicitud exacta:** "hagamos la pendiente real de entrega"; después "Sí: subir las ramas y comprobar CI" y, ante la ausencia de workflows descubiertos, "Sí: corregir CI y publicar la tercera rama".
+- **Alcance:** Repositorio `github.com/SoPerez1/tpfi_is2`; ramas encadenadas `tpfi/docs-automation`, `tpfi/aws-evidence` y `ci/tpfi-actions-root`. Los workflows CI/documentación activos van en la raíz, ejecutan comandos en `TPFI_IS2/` y usan rutas de artefactos relativas al repositorio. Las plantillas anidadas permanecen sin cambios; no se activan publicación PyPI ni otros workflows.
+- **Límites y evidencia:** Sin PR, merge, despliegue de Pages desde estas ramas, cambios de credenciales o código aplicativo. Los controles locales verifican la configuración, pero no son prueba de ejecuciones alojadas; el responsable de la entrega debe observar los runs tras publicar las ramas.

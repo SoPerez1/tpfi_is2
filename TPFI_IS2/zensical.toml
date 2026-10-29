@@ -6,10 +6,12 @@ repo_name = "SoPerez1/TPFI_IS2"
 
 nav = [
   { "Inicio" = "index.md" },
-  { "Instalacion" = "installation.md" },
+  { "Instalación" = "installation.md" },
   { "Uso" = "usage.md" },
+  { "Protocolo HTTP" = "protocolo_http.md" },
   { "Diagramas UML" = "diagramas_uml.md" },
   { "Informe" = "informe_tpfi.md" },
+  { "Validación AWS" = "validacion_aws.md" },
   { "Referencia de la API" = "api.md" },
 ]
 

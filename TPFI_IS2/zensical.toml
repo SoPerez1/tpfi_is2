@@ -5,11 +5,12 @@ repo_url = "https://github.com/SoPerez1/TPFI_IS2"
 repo_name = "SoPerez1/TPFI_IS2"
 
 nav = [
-  { "Home" = "index.md" },
-  { "Installation" = "installation.md" },
-  { "Usage" = "usage.md" },
-  { "Protocolo HTTP" = "protocolo_http.md" },
-  { "API Reference" = "api.md" },
+  { "Inicio" = "index.md" },
+  { "Instalacion" = "installation.md" },
+  { "Uso" = "usage.md" },
+  { "Diagramas UML" = "diagramas_uml.md" },
+  { "Informe" = "informe_tpfi.md" },
+  { "Referencia de la API" = "api.md" },
 ]
 
 [[project.theme.palette]]
